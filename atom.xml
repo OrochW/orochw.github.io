@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://orochw.github.io/</id>
     <title>Gridea</title>
-    <updated>2021-05-16T05:18:58.825Z</updated>
+    <updated>2021-05-16T07:14:19.129Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://orochw.github.io/"/>
     <link rel="self" href="https://orochw.github.io/atom.xml"/>
@@ -11,493 +11,2287 @@
     <icon>https://orochw.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Gridea</rights>
     <entry>
-        <title type="html"><![CDATA[iptables: 包过滤型防火墙]]></title>
-        <id>https://orochw.github.io/post/iptales/</id>
-        <link href="https://orochw.github.io/post/iptales/">
+        <title type="html"><![CDATA[测试哦]]></title>
+        <id>https://orochw.github.io/post/ce-shi-e/</id>
+        <link href="https://orochw.github.io/post/ce-shi-e/">
         </link>
-        <updated>2021-05-14T08:12:00.000Z</updated>
-        <content type="html"><![CDATA[<h1 id="iptables-包过滤型防火墙">iptables: 包过滤型防火墙</h1>
-<p>Firewall: 防火墙，隔离工具；工作于主机或网络的边缘，对于进出本主机或网络的报文根据事先定义好的检查规则作匹配检测，对于能够被规则所匹配到的报文做出相应处理的组件；</p>
-<ol>
-<li>主机防火墙</li>
-<li>网络防火墙</li>
-</ol>
-<ul>
-<li>
-<p>ipfw</p>
-</li>
-<li>
-<p>ipchains</p>
-</li>
-<li>
-<p>iptables/netfilter</p>
-<ul>
-<li>framework: netfilter<br>
-hooks function</li>
-<li>rule utils: iptables</li>
-</ul>
-</li>
-<li>
-<p>功能：</p>
-<p><strong>filter</strong>: 过滤，防火墙；</p>
-<p><strong>nat</strong>: network address translation, 网络地址转换；</p>
-<p><strong>mangle</strong>：拆解报文，做出修改，封装报文；</p>
-<p><strong>raw</strong>：关闭nat表上启用的连接追踪机制；</p>
-</li>
-<li>
-<p>链（内置）：</p>
-<ul>
-<li>PREROUTING</li>
-<li>INPUT</li>
-<li>FORWARD</li>
-<li>OUTPUT</li>
-<li>POSTROUTING</li>
-</ul>
-</li>
-<li>
-<p>方向：</p>
-<ul>
-<li>流入：PREROUTING --&gt; INPUT</li>
-<li>流出：OUTPUT --&gt; POSTROUTING</li>
-<li>转发：PREROUTING --&gt; FORWARD --&gt; POSTROUTING</li>
-</ul>
-</li>
-<li>
-<p>各功能的分别实现：</p>
-<p><strong>filter</strong>：INPUT, FORWARD, OUTPUT</p>
-<p><strong>nat</strong>: PREROUTING(DNAT), OUTPUT, POSTROUTING(SNAT)</p>
-<p><strong>mangle</strong>：PREROUTING, INPUT, FORWARD, OUTPUT, POSTROUTING</p>
-<p><strong>raw</strong>：PREROUTING, OUTPUT</p>
-</li>
-<li>
-<p>路由发生的时刻：</p>
-<ul>
-<li>
-<p>报文进入本机后：</p>
-<p>判断目标主机；</p>
-</li>
-<li>
-<p>报文发出之前：</p>
-<p>判断经由哪个接口送往下一跳；</p>
-</li>
-</ul>
-</li>
-<li>
-<p>iptables：四表五链</p>
-<ul>
-<li>
-<p>添加规则时的考量点：</p>
-<p>要实现哪种功能：判断添加在哪张表上；</p>
-<p>报文流经的路径：判断添加在哪个链上；</p>
-</li>
-<li>
-<p>链：链上规则的次序，即为检查的次序；因此隐含一定的法则</p>
-<ul>
-<li>同类规则(访问同一应用)，匹配范围小的放上面；</li>
-<li>不同类规则(访问不同应用)，匹配到报文频率较大的放上面；</li>
-<li>将那些可由一条规则描述的多个规则合并为一个；</li>
-<li>设置默认策略；
-<blockquote>
-<p>功能的优先级次序：raw --&gt; mangle --&gt; nat --&gt; filter</p>
-</blockquote>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>规则：</p>
-<blockquote>
-<p>组成部分：报文的匹配条件，匹配到之后处理动作</p>
-</blockquote>
-<ul>
-<li>匹配条件：根据协议报文特征指定
-<ul>
-<li>基本匹配条件</li>
-<li>扩展匹配条件</li>
-</ul>
-</li>
-<li>处理动作：
-<ul>
-<li>内建处理机制</li>
-<li>自定义处理机制</li>
-</ul>
-</li>
-</ul>
-<blockquote>
-<p>注意：报文不会经过自定义链，只能在内置链上通过规则进行引用后生效；</p>
-</blockquote>
-</li>
-</ul>
-<h2 id="iptables规则管理工具">iptables：规则管理工具</h2>
-<blockquote>
-<p>添加、修改、删除、显示等；</p>
-</blockquote>
-<h3 id="规则和链有计数器">规则和链有计数器：</h3>
-<blockquote>
-<p>pkts：由规则或链所匹配到的报文的个数；<br>
-bytes：由规则或链匹配到的所有报文大小之和；</p>
-</blockquote>
-<h3 id="iptables命令">iptables命令：</h3>
-<pre><code>iptables [-t table] {-A|-D} chain rule-specification
-
-iptables [-t table] -I chain [rulenum] rule-specification
-
-iptables [-t table] -R chain rulenum rule-specification
-
-iptables [-t table] -D chain rulenum
-
-iptables [-t table] -S [chain [rulenum]]
-
-iptables [-t table] {-F|-L|-Z} [chain [rulenum]] [options...]
-
-iptables [-t table] -N chain
-
-iptables [-t table] -X [chain]
-
-iptables [-t table] -P chain target
-
-iptables [-t table] -E old-chain-name new-chain-name
-
--t table：
-  filter, nat, mangle, raw
-</code></pre>
-<h4 id="iptables作用">iptables作用</h4>
-<ul>
-<li>链管理：</li>
-</ul>
-<pre><code>-F：flush，清空规则链；省略链，表示清空指定表上的所有的链；
--N：new, 创建新的自定义规则链；
--X：drop, 删除用户自定义的空的规则链；
--Z：zero，清零，置零规则计数器；
--P：Policy，为指定链设置默认策略；对filter表中的链而言，默认策略通常有ACCEPT, DROP, REJECT; 
--E: rEname，重命令自定义链；引用计数不为0的自定义链，无法改名，也无法删除；
-</code></pre>
-<ul>
-<li>规则管理：</li>
-</ul>
-<pre><code>-A：append，将新规则追加于指定链的尾部；
--I：insert，将新规则插入至指定链的指定位置；
--D：delete，删除指定链上的指定规则；
-</code></pre>
-<ul>
-<li>
-<p>有两种指定方式：</p>
-<p>指定匹配条件；</p>
-<p>指定规则编号；</p>
-<pre><code>-R：replace，替换指定链上的指定规则；
-</code></pre>
-</li>
-<li>
-<p>查看：</p>
-<pre><code>-L：list，列出指定链上的所有规则；
-  -n: numberic，以数字格式显示地址和端口号；
-  -v: verbose，显示详细信息；
-  -vv, -vvv
-  --line-numbers：显示规则编号；
-  -x: exactly, 显示计数器计数结果的精确值；
-</code></pre>
-</li>
-<li>
-<p>匹配条件：</p>
-<ul>
-<li>基本匹配：<pre><code>[!] -s, --src, --source IP|Netaddr：检查报文中源IP地址是否符合此处指定的地址范围；
-[!] -d, --dst, --destination IP|Netaddr：检查报文中源IP地址是否符合此处指定的地址范围；
--p, --protocol {tcp|udp|icmp}：检查报文中的协议，即ip首部中的protocols所标识的协议；
--i, --in-interface IFACE：数据报文的流入接口；仅能用于PREROUTING, INPUT及FORWARD链上；
--o, --out-interface IFACE：数据报文的流出接口；仅能用于FORWARD, OUTPUT及POSTROUTING链上；
-</code></pre>
-</li>
-<li>扩展匹配：-m macth_name --spec_options
-<blockquote>
-<p>例如：-m tcp --dport 22</p>
-</blockquote>
-<ul>
-<li>
-<p>隐式扩展：对-p protocol指明的协议进行的扩展，可省略-m选项；</p>
-<pre><code>-p tcp
-  --dport PORT[-PORT]：目标端口，可以是单个端口或连续多个端口；
-  --sport PORT[-PORT]
-  --tcp-flags LIST1 LIST2：检查LIST1所指明的所有标志位，且这其中，LIST2所表示出的所有标记位必须为1，而余下的必须为0；没有LIST1中指明的，不作检查；
-  --syn: 
--p udp
-  --dport
-  --sport
--p icmp
-  --icmp-type
-    可用数字表示其类型：
-      0：echo-reply
-      8: echo-request
-</code></pre>
-<blockquote>
-<p>SYN, ACK, FIN, RST, PSH, URG</p>
-</blockquote>
-<blockquote>
-<p>--tcp-flags SYN,ACK,FIN,RST SYN</p>
-</blockquote>
-</li>
-</ul>
-</li>
-<li>显式扩展: 必须使用-m选项指定使用的扩展；</li>
-</ul>
-</li>
-<li>
-<p>目标：</p>
-</li>
-</ul>
-<pre><code>-j TARGET：jump至指定的TARGET
-ACCEPT: 接受
-DROP: 丢弃
-REJECT: 拒绝
-RETURN: 返回调用链
-REDIRECT：端口重定向
-LOG: 记录日志
-MARK：做防火墙标记
-DNAT：目标地址转换
-SNAT：源地址转换
-MASQUERADE：地址伪装
-...
-自定义链：由自定义链上的规则进行匹配检查
-</code></pre>
-<h3 id="iptables">iptables：</h3>
-<blockquote>
-<p>显式扩展：必须显式指明使用的扩展模块(rpm -ql iptables | grep &quot;.so&quot;)</p>
-</blockquote>
-<p><strong>CentOS 6</strong>: man iptables</p>
-<p><strong>CentOS 7</strong>: man iptables-extensions</p>
-<ul>
-<li>multiport扩展</li>
-</ul>
-<blockquote>
-<p>以离散方式定义多端口匹配；最多指定15个端口；</p>
-</blockquote>
-<pre><code>[!] --source-ports,--sports port[,port|,port:port]...：指明多个源端口；
-[!] --destination-ports,--dports port[,port|,port:port]...：指明多个离散的目标端口；
-[!] --ports port[,port|,port:port]...
-
-~]# iptables -I INPUT -s 172.16.0.0/16 -d 172.16.100.9 -p tcp -m multiport --dports 22,80 -j ACCEPT
-~]# iptables -I OUTPUT -d 172.16.0.0/16 -s 172.16.100.9 -p tcp -m multiport --sports 22,80 -j ACCEPT
-</code></pre>
-<ul>
-<li>iprange扩展</li>
-</ul>
-<blockquote>
-<p>指明连续的（但一般是不能扩展为整个网络）ip地址范围时使用；</p>
-</blockquote>
-<pre><code>[!] --src-range from[-to]：指明连续的源IP地址范围；
-[!] --dst-range from[-to]：指明连续的目标IP地址范围；
-
-~~]# iptables -I INPUT -d 172.16.100.9 -p tcp -m multiport --dports 22:23,80 -m iprange --src-range 172.16.100.1-172.16.100.120 -j ACCEPT
-~]# iptables -I OUTPUT -s 172.16.100.9 -p tcp -m multiport --sports 22:23,80 -m iprange --dst-range 172.16.100.1-172.16.100.120 -j ACCEPT		
-</code></pre>
-<ul>
-<li>String扩展</li>
-</ul>
-<blockquote>
-<p>检查报文中出现的字符串；</p>
-</blockquote>
-<pre><code>--algo {bm|kmp}
-  bm = Boyer-Moore
-  kmp = Knuth-Pratt-Morris
-[!] --string pattern
-
-~]# iptables -I OUTPUT -m string --algo bm --string 'movie' -j REJECT
-</code></pre>
-<ul>
-<li>time扩展</li>
-</ul>
-<blockquote>
-<p>根据报文到达的时间与指定的时间范围进行匹配；</p>
-</blockquote>
-<pre><code>--datestart 
---datestop
-
---timestart
---timestop
-
---monthdays
---weekdays
-</code></pre>
-<ul>
-<li>connlimit扩展</li>
-</ul>
-<blockquote>
-<p>根据每客户端IP（也可以是地址块）做并发连接数数量匹配；</p>
-</blockquote>
-<pre><code>--connlimit-above n：连接的数量大于n  	拒绝
---connlimit-upto n: 连接的数量小于等于n	允许
-</code></pre>
-<ul>
-<li>示例：</li>
-</ul>
-<pre><code>iptables -I INPUT -p tcp --dport 22 -m --connlimit-above 3 -j REJECT
-</code></pre>
-<blockquote>
-<p>每个请求的目标地址的22端口的最大连接数为3.超出不响应</p>
-</blockquote>
-<ul>
-<li>limit扩展</li>
-</ul>
-<blockquote>
-<p>基于收发报文的速率做检查；<br>
-<strong>原理</strong>：令牌桶过滤器</p>
-</blockquote>
-<pre><code>--limit       rate[/second|/minute|/hour|/day]
---limit-burst number
-</code></pre>
-<ul>
-<li>示例：</li>
-</ul>
-<pre><code>iptables -A INPUT -d 192.168.134.7 -p imcp --imcp-type 8 -m limit --limit-burst 5 --limit 30/minute -j ACCEPT
-</code></pre>
-<blockquote>
-<p>每个icmp请求目标地址为192.168.134.7的主机。请求主机一次最多响应5个icmp请求，多余5个以每分钟30个速度进行响应类型为icmp8的响应包</p>
-</blockquote>
-<ul>
-<li>
-<p>state扩展</p>
-<ul>
-<li>根据连接追踪机制检查连接的状态；</li>
-<li>调整连接追踪功能所能够容纳的最大连接数量：</li>
-</ul>
-<pre><code>/proc/sys/net/nf_conntrack_max
-</code></pre>
-<ul>
-<li>已经追踪到并记录下的连接：</li>
-</ul>
-<pre><code>/proc/net/nf_conntrack
-</code></pre>
-<ul>
-<li>不同协议或连接类型追的时长：</li>
-</ul>
-<pre><code>/proc/sys/net/netfilter/
-</code></pre>
-<ul>
-<li>可追踪的连接状态：</li>
-</ul>
-<p><strong>NEW</strong>：新发出的请求；连接追踪模板中不存此连接相关的信息条目，因此，将其识别为第一次发出的请求；</p>
-<p><strong>ESTABLISHED</strong>：NEW状态之后，连接追踪模板中为其建立的条目失效之前期间内所进行的通信的状态；</p>
-<p><strong>RELATED</strong>：相关的连接；如ftp协议的命令连接与数据连接之间的关系；</p>
-<p><strong>INVALIED</strong>：无法识别的连接；</p>
-<ul>
-<li><code>--state STATE1,STATE2,...</code></li>
-</ul>
-</li>
-</ul>
-<h4 id="示例"><strong>示例</strong>：</h4>
-<p>iptables 放行ftp服务？</p>
-<pre><code>(1) 装载ftp追踪时的专用的模块:
-# modprobe nf_conntrack_ftp
-
-(2) 放行请求报文：
-命令连接：NEW, ESTABLISHED
-数据连接：RELATED, ESTABLISHED
-
-# iptables -A INPUT -d LocalIP -p tcp --dport 21 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -A INPUT -d LocalIP -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
-
-(3) 放行响应报文：
-ESTABLISEHD
-
-# iptables -A OUTPUT -s LocalIP -p tcp -m state --state ESTABLISHED -j ACCEPT
-</code></pre>
-<h3 id="如何保存及重载规则">如何保存及重载规则：</h3>
-<ul>
-<li>
-<p>保存规则至指定文件：</p>
-<pre><code>iptables-save &gt; /PATH/TO/SOMEFILE
-</code></pre>
-</li>
-<li>
-<p>从指定文件重载规则：</p>
-<pre><code>iptables-restore &lt; /PATH/FROM/SOMEFILE
-</code></pre>
-<ul>
-<li>CentOS 6:</li>
-</ul>
-<pre><code>service iptables save 
-  iptables-save &gt; /etc/sysconfig/iptables
-  
-service iptables restart
-  iptables-restore &lt; /etc/sysconfig/iptables
-</code></pre>
-<ul>
-<li>CentOS 7:</li>
-</ul>
-<blockquote>
-<p>引入了新的iptables前端管理服务工具：firewalld</p>
-</blockquote>
-<p>firewalld-cmd</p>
-<p>firewalld-config</p>
-</li>
-</ul>
-<h4 id="关于firewalld">关于firewalld：</h4>
-<p>http://www.ibm.com/developerworks/cn/linux/1507_caojh/index.html</p>
-<h4 id="iptables-nat地址端口转发">iptables NAT地址端口转发</h4>
-<ul>
-<li>
-<p>nat：Network Address Translation，安全性，网络层+传输层</p>
-</li>
-<li>
-<p>proxy：代理，应用层</p>
-</li>
-<li>
-<p>nat:</p>
-<ul>
-<li>SNAT: 只修改请求报文的源地址；</li>
-<li>DNAT：只修改请求报文的目标地址；</li>
-<li>PNAT：端口映射<br>
-nat表：</li>
-<li>PREROUTING：DNAT 响应报文返回</li>
-<li>OUTPUT</li>
-<li>POSTROUTING：SNAT 请求报文发出</li>
-</ul>
-</li>
-<li>
-<p>源地址转换：</p>
-</li>
-</ul>
-<pre><code>iptables -t nat -A POSTROUTING -s LocalNET ! -d LocalNet -j SNAT --to-source ExtIP
-iptables -t nat -A POSTROUTING -s LocalNET ! -d LocalNet -j MASQUERADE
-</code></pre>
-<ul>
-<li>目标地址转换：</li>
-</ul>
-<pre><code>iptables -t nat -A PREROUTING -d ExtIP -p tcp|udp --dport PORT -j DNAT --to-destination InterSeverIP[:PORT]
-</code></pre>
-<p>相关链接：https://www.jianshu.com/p/177a06511574</p>
+        <updated>2021-05-16T07:10:59.000Z</updated>
+        <content type="html"><![CDATA[<p>测试</p>
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[Hello Gridea]]></title>
-        <id>https://orochw.github.io/post/hello-gridea/</id>
-        <link href="https://orochw.github.io/post/hello-gridea/">
+        <title type="html"><![CDATA[redis一键安装脚本]]></title>
+        <id>https://orochw.github.io/post/redis-yi-jian-an-zhuang-jiao-ben/</id>
+        <link href="https://orochw.github.io/post/redis-yi-jian-an-zhuang-jiao-ben/">
         </link>
-        <updated>2018-12-11T16:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-<!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="https://gridea.dev/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+        <updated>2021-05-16T05:43:33.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="安装redis">安装redis</h2>
+<pre><code>cd /opt
+useradd redis
+mkdir -pv /data/apps/redis/{conf,logs,data}
+
+wget http://download.redis.io/releases/redis-5.0.0.tar.gz
+tar -xf redis-5.0.0.tar.gz
+cd redis-5.0.0
+
+
+make install PREFIX=/data/apps/redis
+
+cp redis.conf /data/apps/redis/conf/
+chown -R redis.redis /data/apps/redis
+
+cd /data/apps/redis
+sed -i 's/appendonly no/appendonly yes/' conf/redis.conf
+sed -i '/^dir/d' conf/redis.conf
+echo &quot;dir /data/apps/redis/data&quot; &gt;&gt; conf/redis.conf
+echo &quot;requirepass `&lt; /dev/urandom tr -cd _A-Z-a-z-0-9@#^ | head -c ${1:-20}; echo`&quot;  &gt;&gt; conf/redis.conf
+sed -i 's#logfile &quot;&quot;#logfile &quot;/data/apps/redis/logs/redis.log&quot;#g' conf/redis.conf
+sed -i 's/bind 127.0.0.1/bind 0.0.0.0/' conf/redis.conf
+sed -i 's/protected-mode yes/protected-mode no/' conf/redis.conf
+
+
+
+cat &lt;&lt;EOF &gt; /usr/lib/systemd/system/redis.service
+[Unit]
+Description=Redis Server Manager
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=redis
+Group=redis
+PIDFile=/var/run/redis_6379.pid
+ExecStart=/data/apps/redis/bin/redis-server /data/apps/redis/conf/redis.conf
+ExecStop=/data/apps/redis/bin/redis-cli shutdown
+Restart=always
+#ReadWriteDirectories=/data/apps/redis/data
+[Install]
+WantedBy=multi-user.target
+EOF
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[新开机器所需安装]]></title>
+        <id>https://orochw.github.io/post/xin-kai-ji-qi-suo-xu-an-zhuang/</id>
+        <link href="https://orochw.github.io/post/xin-kai-ji-qi-suo-xu-an-zhuang/">
+        </link>
+        <updated>2021-05-16T05:42:09.000Z</updated>
+        <content type="html"><![CDATA[<pre><code>yum install -y epel-release vim wget telnet lsof unzip ntpdate  git net-tools sysstat   gcc gcc-c++  python-pip
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[jdk安装脚本]]></title>
+        <id>https://orochw.github.io/post/jdk-an-zhuang-jiao-ben/</id>
+        <link href="https://orochw.github.io/post/jdk-an-zhuang-jiao-ben/">
+        </link>
+        <updated>2021-05-16T05:41:34.000Z</updated>
+        <content type="html"><![CDATA[<p>####### 安装jdk</p>
+<pre><code>yum install -y java-1.8.0-openjdk  java-1.8.0-openjdk-devel.x86_64
+ls -lrt /usr/bin/java 
+cat &lt;&lt;'EOF' &gt; /etc/profile.d/jdk.sh
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.275.b01-0.el7_9.x86_64/
+export JRE_HOME=$JAVA_HOME/jre
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib:$CLASSPATH
+export PATH=$JAVA_HOME/bin:$PATH
+EOF
+source /etc/profile
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[使用kubeadm安装kubernetes集群]]></title>
+        <id>https://orochw.github.io/post/shi-yong-kubeadm-an-zhuang-kubernetes-ji-qun/</id>
+        <link href="https://orochw.github.io/post/shi-yong-kubeadm-an-zhuang-kubernetes-ji-qun/">
+        </link>
+        <updated>2021-05-16T05:40:05.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="k8s安装">K8s安装</h1>
+<p>kubeadm<br>
+1、master nodes：安装kubelet kubeadm docker<br>
+2、master：kubelet init<br>
+3、node：kubelet join</p>
+<h2 id="一-准备工作">一、准备工作</h2>
+<p>关闭防火墙，iptables，关闭swap分区</p>
+<pre><code>systemctl stop firewalld
+swapoff -a
+iptables -F
+
+yum install -y bridge-utils.x86_64
+modprobe  br_netfilter  # 加载br_netfilter模块，使用lsmod查看开启的模块
+cat &lt;&lt;EOF &gt;  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system  # 重新加载所有配置文件
+</code></pre>
+<h2 id="二-准备yum源">二、准备yum源</h2>
+<h3 id="1-准备docker的yum源">1、准备docker的yum源</h3>
+<pre><code>$ sudo yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+
+$ sudo yum install -y yum-utils
+
+$ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo                
+</code></pre>
+<h3 id="2-准备k8s的yum源">2、准备K8s的yum源</h3>
+<pre><code>cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+</code></pre>
+<h2 id="三-安装k8s-docker-1个master-2个node">三、安装k8s docker 1个master、2个node</h2>
+<p>master</p>
+<pre><code>yum install docker-ce kubelet kubeadm kubectl bash-completion -y
+
+</code></pre>
+<p>node节点</p>
+<pre><code>yum install docker-ce kubelet kubeadm -y
+</code></pre>
+<h2 id="四-主节点的初始化">四、主节点的初始化</h2>
+<h3 id="1-启动docker和kubelet">1、启动docker和kubelet</h3>
+<pre><code>vim /etc/sysconfig/kubelet
+
+# KUBELET_EXTRA_ARGS=&quot;--fail-swap-on=false&quot;
+
+# kubectl 命令补全
+source /usr/share/bash-completion/bash_completion
+source &lt;(kubectl completion bash)
+echo &quot;source &lt;(kubectl completion bash)&quot; &gt;&gt; ~/.bashrc
+
+systemctl start docker kubelet 
+systemctl enable docker kubelet
+kubeadm init --kubernetes-version=stable-1 --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12 --ignore-preflight-errors=Swap
+</code></pre>
+<p>master初始化完成</p>
+<pre><code>[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Creating the &quot;cluster-info&quot; ConfigMap in the &quot;kube-public&quot; namespace
+[kubelet-finalize] Updating &quot;/etc/kubernetes/kubelet.conf&quot; to point to a rotatable kubelet client certificate and key
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run &quot;kubectl apply -f [podnetwork].yaml&quot; with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.19.29:6443 --token rp14ge.sd6dlzilhzik7ga5 \
+    --discovery-token-ca-cert-hash sha256:d69202fa7177ceecc3fd2ef899ce18fa78530c91ec4a64fe910dc5674669ec31
+</code></pre>
+<h3 id="2-排错">2、排错</h3>
+<pre><code>[root@master ~]# kubectl get cs
+Warning: v1 ComponentStatus is deprecated in v1.19+
+NAME                 STATUS      MESSAGE                                                                                       ERROR
+scheduler            Unhealthy   Get &quot;http://127.0.0.1:10251/healthz&quot;: dial tcp 127.0.0.1:10251: connect: connection refused   
+controller-manager   Unhealthy   Get &quot;http://127.0.0.1:10252/healthz&quot;: dial tcp 127.0.0.1:10252: connect: connection refused   
+etcd-0               Healthy     {&quot;health&quot;:&quot;true&quot;}  
+</code></pre>
+<p>通过搜索应该是禁用端口</p>
+<pre><code>vim /etc/kubernetes/manifests/kube-scheduler.yaml
+#    - --port=0
+vim /etc/kubernetes/manifests/kube-controller-manager.yaml
+#    - --port=0
+</code></pre>
+<p>重启kubelet</p>
+<pre><code>[root@master manifests]# systemctl restart kubelet
+[root@master manifests]# kubectl get cs
+Warning: v1 ComponentStatus is deprecated in v1.19+
+NAME                 STATUS    MESSAGE             ERROR
+controller-manager   Healthy   ok                  
+scheduler            Healthy   ok                  
+etcd-0               Healthy   {&quot;health&quot;:&quot;true&quot;}
+</code></pre>
+<h3 id="3-安装网络组件">3、 安装网络组件</h3>
+<blockquote>
+<p><a href="https://github.com/coreos/flannel">flannel组件主页</a></p>
+</blockquote>
+<blockquote>
+<p>flannel For Kubernetes v1.17+</p>
+</blockquote>
+<pre><code>kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+</code></pre>
+<p>查看节点状态</p>
+<pre><code>[root@master manifests]# kubectl get nodes
+NAME     STATUS   ROLES                  AGE   VERSION
+master   Ready    control-plane,master   20m   v1.20.2
+</code></pre>
+<h2 id="五-node节点加入">五、node节点加入</h2>
+<h3 id="1-yum源准备">1、yum源准备</h3>
+<pre><code>[master]# scp /etc/yum.repos.d/docker-ce.repo node1:/etc/etc/yum.repos.d/docker-ce.repo
+[master]# scp /etc/yum.repos.d/kubernetes.repo node1:/etc/etc/yum.repos.d/kubernetes.repo
+</code></pre>
+<h3 id="2-安装docker和kubelet-kubeadm">2、安装docker和kubelet kubeadm</h3>
+<pre><code>yum install -y docker kubelet kubeadm
+</code></pre>
+<h3 id="3-启动并设置开机自启">3、启动并设置开机自启</h3>
+<pre><code>systemctl start docker kubelet
+systemctl enable docker kubelet
+</code></pre>
+<h3 id="4-加入节点">4、加入节点</h3>
+<pre><code>[root@234c12 ~]# kubeadm join 192.168.19.29:6443 --token rp14ge.sd6dlzilhzik7ga5 \
+    --discovery-token-ca-cert-hash sha256:d69202fa7177ceecc3fd2ef899ce18fa78530c91ec4a64fe910dc5674669ec31 --ignore-preflight-errors=Swap
+</code></pre>
+<p>查看集群状态</p>
+<pre><code>[root@master ~]# kubectl get nodes
+NAME     STATUS   ROLES                  AGE     VERSION
+master   Ready    control-plane,master   8m22s   v1.20.2
+node1    Ready    &lt;none&gt;                 3m51s   v1.20.2
+node2    Ready    &lt;none&gt;                 3m44s   v1.20.2
+
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[正则表达式及扩展正则]]></title>
+        <id>https://orochw.github.io/post/zheng-ze-biao-da-shi-ji-kuo-zhan-zheng-ze/</id>
+        <link href="https://orochw.github.io/post/zheng-ze-biao-da-shi-ji-kuo-zhan-zheng-ze/">
+        </link>
+        <updated>2021-05-16T05:38:59.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="grep">grep：</h2>
+<blockquote>
+<p>Linux上文本处理三剑客</p>
+</blockquote>
+<blockquote>
+<p>grep：文本过滤(模式：pattern)工具;</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>grep, egrep, fgrep</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>sed：stream editor，文本编辑工具；</p>
+</blockquote>
+<blockquote>
+<p>awk：Linux上的实现gawk，文本报告生成器；</p>
+</blockquote>
+<blockquote>
+<p>grep: Global search REgular expression and Print out the line.</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>作用：文本搜索工具，根据用户指定的“模式”对目标文本逐行进行匹配检查；打印匹配到的行；</p>
+<blockquote>
+<p>模式：由正则表达式字符及文本字符所编写的过滤条件；<br>
+REGEXP：由一类特殊字符及文本字符所编写的模式，其中有些字符不表示字符字面意义，而表示控制或通配的功能；<br>
+分两类：</p>
+<blockquote>
+<p>基本正则表达式：BRE<br>
+扩展正则表达式：ERE</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>grep -E, egrep</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<pre><code>正则表达式引擎
+	grep [OPTIONS] PATTERN [FILE...]
+	选项：
+		--color=auto: 对匹配到的文本着色显示；
+		-v: 显示不能够被pattern匹配到的行；
+		-i: 忽略字符大小写；
+		-o: 仅显示匹配到的字符串；
+		-q: 静默模式，不输出任何信息；
+		-A #：after, 后#行
+		-B #: before, 前#行
+		-C #：context, 前后各#行
+
+		-E：使用ERE；
+</code></pre>
+<ul>
+<li>
+<p>基本正则表达式元字符：</p>
+<ul>
+<li>字符匹配:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>字符匹配</th>
+<th>涵义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td>匹配任意单个字符</td>
+</tr>
+<tr>
+<td>[]</td>
+<td>匹配指定范围内的任意单个字符</td>
+</tr>
+<tr>
+<td>[^]</td>
+<td>匹配指定范围外的任意单个字符</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>字符集：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>字符集</th>
+<th>对应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[:digit:]</td>
+<td>任何数字</td>
+</tr>
+<tr>
+<td>[:lower:]</td>
+<td>任何小写字母</td>
+</tr>
+<tr>
+<td>[:upper:]</td>
+<td>任何大写字母</td>
+</tr>
+<tr>
+<td>[:alpha:]</td>
+<td>任何字母</td>
+</tr>
+<tr>
+<td>[:alnum:]</td>
+<td>任何字母和数字</td>
+</tr>
+<tr>
+<td>[:punct:]</td>
+<td>任何标点符号</td>
+</tr>
+<tr>
+<td>[:space:]</td>
+<td>任何空白字符</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>匹配次数：用在要指定次数的字符后面，用于指定前面的字符要出现的次数；</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>次数匹配</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>匹配前面的字符任意次</td>
+</tr>
+<tr>
+<td>?</td>
+<td>0或1次</td>
+</tr>
+<tr>
+<td>+</td>
+<td>1次或多次</td>
+</tr>
+<tr>
+<td>m</td>
+<td>匹配m次</td>
+</tr>
+<tr>
+<td>m,n</td>
+<td>至少m，至多n次</td>
+</tr>
+</tbody>
+</table>
+<pre><code>*：匹配前面的字符任意次；
+	例如: grep &quot;x*y&quot; 
+		abxy
+		xay
+		xxxxxxy
+</code></pre>
+<ul>
+<li>贪婪模式</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>匹配规则</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.*</td>
+<td>任意长度的任意字符</td>
+</tr>
+<tr>
+<td>?</td>
+<td>匹配其前面的字符0或1次；即前面的可有可无</td>
+</tr>
+<tr>
+<td>+</td>
+<td>匹配其前面的字符至少1次</td>
+</tr>
+<tr>
+<td>{m}</td>
+<td>匹配前面的字符m次</td>
+</tr>
+<tr>
+<td>{m,n}</td>
+<td>匹配前面的字符至少m次，至多n次</td>
+</tr>
+<tr>
+<td>{0,n}</td>
+<td>匹配前面的字符至多n次</td>
+</tr>
+<tr>
+<td>{m,}</td>
+<td>匹配前面的字符至少m次</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>位置锚定：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>匹配规则</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>^</td>
+<td>行首锚定；用于模式的最左侧</td>
+</tr>
+<tr>
+<td>$</td>
+<td>行尾锚定；用于模式的最右侧</td>
+</tr>
+<tr>
+<td>^PATTERN$</td>
+<td>用于模式匹配整行</td>
+</tr>
+<tr>
+<td>^$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>*$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td>&lt; 或 \b</td>
+<td>词首锚定；用于单词模式的左侧</td>
+</tr>
+<tr>
+<td>&gt; 或 \b</td>
+<td>词尾锚定；用于单词模式的右侧</td>
+</tr>
+<tr>
+<td>&lt;PATTERN&gt;</td>
+<td>匹配整个单词</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>分组：
+<ul>
+<li>()：将一个或多个字符捆绑在一起，当作一个整体进行处理；
+<ul>
+<li>(xy)*ab</li>
+</ul>
+</li>
+<li>Note: 分组括号中的模式匹配到的内容会被正则表达式引擎记录于内部的变量中，这些变量的命名方式为: \1, \2, \3, ...
+<ul>
+<li>\1: 从左侧起，第一个左括号以及与之匹配右括号之间的模式所匹配到的字符；
+<ul>
+<li>(ab+(xy)*)：
+<ul>
+<li>\1: ab+(xy)*</li>
+<li>\2: xy</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>后向引用：引用前面的分组括号中的模式所匹配字符，(而非模式本身)</p>
+</blockquote>
+<h2 id="egrep及扩展的正则表达式">egrep及扩展的正则表达式</h2>
+<blockquote>
+<p>egrep = grep -E</p>
+</blockquote>
+<p>语法：<code>egrep [OPTIONS] PATTERN [FILE...]</code></p>
+<h3 id="扩展正则表达式的元字符">扩展正则表达式的元字符：</h3>
+<table>
+<thead>
+<tr>
+<th>字符匹配</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td>匹配任意单个字符</td>
+</tr>
+<tr>
+<td>[]</td>
+<td>匹配指定范围内的任意单个字符]</td>
+</tr>
+<tr>
+<td>[^]</td>
+<td>匹配指定范围外的任意单个字符</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>次数匹配</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>匹配前面的字符任意次</td>
+</tr>
+<tr>
+<td>?</td>
+<td>0或1次</td>
+</tr>
+<tr>
+<td>+</td>
+<td>1次或多次</td>
+</tr>
+<tr>
+<td>m</td>
+<td>匹配m次</td>
+</tr>
+<tr>
+<td>m,n</td>
+<td>至少m，至多n次</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>匹配规则</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>^</td>
+<td>行首锚定；用于模式的最左侧</td>
+</tr>
+<tr>
+<td>$</td>
+<td>行尾锚定；用于模式的最右侧</td>
+</tr>
+<tr>
+<td>^PATTERN$</td>
+<td>用于模式匹配整行</td>
+</tr>
+<tr>
+<td>^$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td><sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>*$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td>&lt; 或 \b</td>
+<td>词首锚定；用于单词模式的左侧</td>
+</tr>
+<tr>
+<td>&gt; 或 \b</td>
+<td>词尾锚定；用于单词模式的右侧</td>
+</tr>
+<tr>
+<td>&lt;PATTERN&gt;</td>
+<td>匹配整个单词</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>或者：</p>
+<blockquote>
+<p>a|b</p>
+<blockquote>
+<p>C|cat: C或cat</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>[:space:] <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>[:space:] <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[权限管理：]]></title>
+        <id>https://orochw.github.io/post/quan-xian-guan-li/</id>
+        <link href="https://orochw.github.io/post/quan-xian-guan-li/">
+        </link>
+        <updated>2021-05-16T05:38:27.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="文件的权限主要针对三类对象进行定义">文件的权限主要针对三类对象进行定义：</h3>
+<blockquote>
+<p>owner : 属主, u</p>
+</blockquote>
+<blockquote>
+<p>group : 属组, g</p>
+</blockquote>
+<blockquote>
+<p>other : 其他, o</p>
+</blockquote>
+<h3 id="每个文件针对每类访问者都定义了三种权限">每个文件针对每类访问者都定义了三种权限：</h3>
+<blockquote>
+<p>r : Readable</p>
+</blockquote>
+<blockquote>
+<p>w : Writable</p>
+</blockquote>
+<blockquote>
+<p>x : eXcutable</p>
+</blockquote>
+<h4 id="文件">文件：</h4>
+<blockquote>
+<p>r: 可使用文件查看类工具获取其内容；</p>
+</blockquote>
+<blockquote>
+<p>w: 可修改其内容；</p>
+</blockquote>
+<blockquote>
+<p>x: 可以把此文件提请内核启动为一个进程；</p>
+</blockquote>
+<h4 id="目录">目录：</h4>
+<blockquote>
+<p>r: 可以使用ls查看此目录中文件列表；</p>
+</blockquote>
+<blockquote>
+<p>w: 可在此目录中创建文件，也可删除此目录中的文件；</p>
+</blockquote>
+<blockquote>
+<p>x: 可以使用ls -l查看此目录中文件列表，可以cd进入此目录；</p>
+</blockquote>
+<pre><code>数字权限转换：
+	--- 000 0
+	--x 001 1
+	-w- 010 2
+	-wx 011 3
+	r-- 100 4
+	r-x 101 5
+	rw- 110 6
+	rwx 111 7
+例如：
+	640: rw-r-----
+	rwxr-xr-x: 755
+</code></pre>
+<h3 id="修改文件权限chmod">修改文件权限：chmod</h3>
+<blockquote></blockquote>
+<pre><code>chmod [OPTION]... OCTAL-MODE FILE...
+	-R: 递归修改权限
+	chmod [OPTION]... MODE[,MODE]... FILE...
+		MODE:
+		修改一类用户的所有权限：
+			u=xxx
+			g=xxx
+			o=xxx
+			ug=xxx
+			a=xxx
+			u=,g=xxx
+修改一类用户某位或某些位权限
+	u+
+	u-
+chmod [OPTION]... --reference=RFILE FILE...
+
+参考RFILE文件的权限，将FILE的修改为同RFILE；
+</code></pre>
+<h3 id="修改文件的属主和属组">修改文件的属主和属组：</h3>
+<blockquote>
+<p>仅root可用；</p>
+</blockquote>
+<pre><code>修改文件的属主：chown
+chown [OPTION]... [OWNER][:[GROUP]] FILE...
+	用法：
+		OWNER
+				OWNER:GROUP
+				:GROUP
+					Note: 命令中的冒号可用.替换；
+				-R: 递归
+			chown [OPTION]... --reference=RFILE FILE...
+修改文件的属组：chgrp
+	chgrp [OPTION]... GROUP FILE...
+	chgrp [OPTION]... --reference=RFILE FILE...
+	-R
+</code></pre>
+<h4 id="文件或目录创建时的遮罩码umask">文件或目录创建时的遮罩码：umask</h4>
+<pre><code>FILE: 666-umask
+	Note: 如果某类的用户的权限减得的结果中存在x权限，则将其权限+1
+DIR: 777-umask	
+	umask: 查看
+	umask #: 设定
+</code></pre>
+<blockquote>
+<p>命令总结：chmod, chown, chgrp, umask</p>
+</blockquote>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[磁盘管理、文件系统管理]]></title>
+        <id>https://orochw.github.io/post/ci-pan-guan-li-wen-jian-xi-tong-guan-li/</id>
+        <link href="https://orochw.github.io/post/ci-pan-guan-li-wen-jian-xi-tong-guan-li/">
+        </link>
+        <updated>2021-05-16T05:37:39.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="linux磁盘管理">Linux磁盘管理</h2>
+<ul>
+<li>I/O Ports: I/O设备地址；
+<ul>
+<li>一切皆文件：
+<ul>
+<li>open(), read(), write(), close()</li>
+<li>块设备：block，存取单位“块”，磁盘</li>
+<li>字符设备：char，存取单位“字符”，键盘</li>
+<li>设备文件：关联至一个设备驱动程序，进而能够跟与之对应硬件设备进行通信；
+<ul>
+<li>设备号码：
+<ul>
+<li>主设备号：major number, 标识设备类型</li>
+<li>次设备号：minor number, 标识同一类型下的不同设备</li>
+</ul>
+</li>
+<li>硬盘接口类型：
+<ul>
+<li>并行：<br>
+IDE：133MB/s<br>
+SCSI：640MB/s</li>
+<li>串口：<br>
+SATA：6Gbps<br>
+SAS：6Gbps<br>
+USB：480MB/s<br>
+rpm: rotations per minute</li>
+</ul>
+</li>
+<li>/dev/DEV_FILE
+<blockquote>
+<p>磁盘设备的设备文件命名：</p>
+</blockquote>
+<ul>
+<li>IDE: /dev/hd<br>
+SCSI, SATA, SAS, USB: /dev/sd
+<ul>
+<li>不同设备：a-z<br>
+<code>/dev/sda, /dev/sdb, ...</code></li>
+<li>同一设备上的不同分区：1,2, ...<br>
+<code>/dev/sda1, /dev/sda5</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>机械式硬盘：
+<ul>
+<li>track：磁道</li>
+<li>cylinder: 柱面</li>
+<li>secotr: 扇区<br>
+** 512bytes **</li>
+<li>如何分区：<br>
+** 按柱面 **</li>
+<li>0磁道0扇区：512bytes</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code>          MBR: Master Boot Record
+           446bytes: boot loader
+	          64bytes：分区表
+	          16bytes: 标识一个分区
+            2bytes: 55AA
+</code></pre>
+<blockquote>
+<blockquote>
+<p>tips<br>
+<strong>4</strong>个主分区；<br>
+3<strong>主分区</strong>+1<strong>扩展</strong>(N个逻辑分区)<br>
+逻辑分区</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>问题：UEFI, GPT？</p>
+</blockquote>
+<h3 id="分区管理工具fdisk-parted-sfdisk">分区管理工具：fdisk, parted, sfdisk</h3>
+<blockquote>
+<p>fdisk：对于一块硬盘来讲，最多只能管理15分区；</p>
+</blockquote>
+<ul>
+<li>语法：<br>
+<code>fdisk -l [-u] [device...]</code></li>
+</ul>
+<pre><code>用法
+# fdisk device(/dev/sd{a,b,c})
+	子命令：管理功能
+	p: print, 显示已有分区；
+	n: new, 创建
+	d: delete, 删除
+	w: write, 写入磁盘并退出
+	q: quit, 放弃更新并退出
+	m: 获取帮助
+	l: 列表所分区id
+	t: 调整分区id
+</code></pre>
+<ul>
+<li>查看内核是否已经识别新的分区：</li>
+</ul>
+<p><code># cat /proc/partations</code></p>
+<ul>
+<li>通知内核重新读取硬盘分区表：</li>
+</ul>
+<pre><code>partx -a /dev/DEVICE
+	-n M:N
+
+	kpartx -a /dev/DEVICE
+		-f: force
+</code></pre>
+<blockquote>
+<p>tips:<br>
+CentOS <strong>5</strong>: 使用partprobe</p>
+</blockquote>
+<p><code>partprobe [/dev/DEVICE]</code></p>
+<h3 id="linux文件系统管理">Linux文件系统管理：</h3>
+<ul>
+<li>Linux文件系统:
+<ul>
+<li>ext2</li>
+<li>ext3</li>
+<li>ext4</li>
+<li>xfs</li>
+<li>btrfs</li>
+<li>reiserfs</li>
+<li>jfs</li>
+<li>swap
+<ul>
+<li>swap: 交换分区</li>
+</ul>
+</li>
+<li>光盘：iso9660</li>
+</ul>
+</li>
+<li>Windows：
+<ul>
+<li>fat32</li>
+<li>ntfs</li>
+</ul>
+</li>
+<li>Unix:
+<ul>
+<li>FFS</li>
+<li>UFS</li>
+<li>JFS2</li>
+</ul>
+</li>
+<li>网络文件系统：
+<ul>
+<li>NFS</li>
+<li>CIFS</li>
+</ul>
+</li>
+<li>集群文件系统：
+<ul>
+<li>GFS2</li>
+<li>OCFS2</li>
+</ul>
+</li>
+<li>分布式文件系统：
+<ul>
+<li>ceph</li>
+<li>moosefs</li>
+<li>mogilefs</li>
+<li>GlusterFS</li>
+<li>Lustre</li>
+</ul>
+</li>
+<li>根据其是否支持&quot;journal&quot;功能：
+<ul>
+<li>日志型文件系统: ext3, ext4, xfs, ...</li>
+<li>非日志型文件系统: ext2, vfat</li>
+</ul>
+</li>
+<li>文件系统的组成部分：
+<ul>
+<li>内核中的模块：ext4, xfs, vfat</li>
+<li>用户空间的管理工具：mkfs.ext4, mkfs.xfs, mkfs.vfat</li>
+</ul>
+</li>
+<li>Linux的虚拟文件系统：VFS</li>
+</ul>
+<h3 id="创建文件系统mkfs命令">创建文件系统：mkfs命令</h3>
+<h4 id="创建文件系统类型">创建文件系统类型：</h4>
+<p><code># mkfs.FS_TYPE /dev/DEVICE</code></p>
+<blockquote>
+<p>ext4</p>
+</blockquote>
+<blockquote>
+<p>xfs</p>
+</blockquote>
+<blockquote>
+<p>btrfs</p>
+</blockquote>
+<blockquote>
+<p>vfat</p>
+</blockquote>
+<h4 id="在哪一个设备设备上创建文件系统">在哪一个设备设备上创建文件系统：</h4>
+<p><code># mkfs -t FS_TYPE /dev/DEVICE</code></p>
+<pre><code>用法：
+-L 'LABEL': 设定卷标
+mke2fs：ext系列文件系统专用管理工具
+	-t {ext2|ext3|ext4}
+	-b {1024|2048|4096}
+	-L 'LABEL'
+	-j: 相当于 -t ext3
+	mkfs.ext3 = mkfs -t ext3 = mke2fs -j = mke2fs -t ext3
+	-i #: 为数据空间中每多少个字节创建一个inode；此大小不应该小于block的大小；
+	-N #：为数据空间创建个多少个inode；
+	-m #: 为管理人员预留的空间占据的百分比；
+	-O FEATURE[,...]：启用指定特性
+	-O ^FEATURE：关闭指定特性
+</code></pre>
+<h4 id="创建交换分区-mkswap">创建交换分区 mkswap</h4>
+<pre><code>mkswap [options] device
+	-L 'LABEL'
+	前提：调整其分区的ID为82；
+</code></pre>
+<h3 id="其它常用工具">其它常用工具：</h3>
+<ul>
+<li>blkid：块设备属性信息查看</li>
+</ul>
+<pre><code>blkid [OPTION]... [DEVICE]
+	+ -U UUID: 根据指定的UUID来查找对应的设备
+	+ -L LABEL：根据指定的LABEL来查找对应的设备
+</code></pre>
+<ul>
+<li>
+<p>e2label：管理ext系列文件系统的LABEL<br>
+<code>e2label DEVICE [LABEL]</code></p>
+</li>
+<li>
+<p>tune2fs：重新设定ext系列文件系统可调整参数的值</p>
+</li>
+</ul>
+<pre><code>	-l：查看指定文件系统超级块信息；super block
+	-L 'LABEL'：修改卷标
+	-m #：修预留给管理员的空间百分比
+	-j: 将ext2升级为ext3
+	-O: 文件系统属性启用或禁用
+	-o: 调整文件系统的默认挂载选项
+	-U UUID: 修改UUID号；
+</code></pre>
+<ul>
+<li>mpe2fs：<br>
+<code>-h：查看超级块信息</code></li>
+</ul>
+<h3 id="文件系统检测">文件系统检测：</h3>
+<pre><code>fsck: File System CheCk
+fsck.FS_TYPE
+fsck -t FS_TYPE
+	-a: 自动修复错误
+	-r: 交互式修复错误
+
+	Note: FS_TYPE一定要与分区上已经文件类型相同；
+
+e2fsck：ext系列文件专用的检测修复工具
+	-y：自动回答为yes; 
+	-f：强制修复；
+</code></pre>
+<h2 id="文件系统管理">文件系统管理：</h2>
+<ul>
+<li>
+<p>将额外文件系统与根文件系统某现存的目录建立起关联关系，进而使得此目录做为其它文件访问入口的行为称之为挂载；</p>
+</li>
+<li>
+<p>解除此关联关系的过程称之为卸载；</p>
+<ul>
+<li>把设备关联挂载点：Mount Point</li>
+</ul>
+<p><code>mount</code></p>
+<ul>
+<li>卸载时：可使用设备，也可以使用挂载点</li>
+</ul>
+<p><code>umount</code></p>
+</li>
+<li>
+<p>注意：挂载点下原有文件在挂载完成后会被临时隐藏；</p>
+</li>
+<li>
+<p>挂载方法：mount DEVICE MOUNT_POINT</p>
+<ul>
+<li>mount：通过查看/etc/mtab文件显示当前系统已挂载的所有设备<br>
+语法：<code>mount [-fnrsvw] [-t vfstype] [-o options] device dir</code>
+<ul>
+<li>device：指明要挂载的设备；
+<ul>
+<li>(1) 设备文件：例如/dev/sda5</li>
+<li>(2) 卷标：-L 'LABEL', 例如 -L 'MYDATA'</li>
+<li>(3) UUID, -U 'UUID'：例如 -U '0c50523c-43f1-45e7-85c0-a126711d406e'</li>
+<li>(4) 伪文件系统名称：proc, sysfs, devtmpfs, configfs</li>
+</ul>
+</li>
+<li>dir：挂载点
+<ul>
+<li>事先存在；建议使用空目录；</li>
+<li>进程正在使用中的设备无法被卸载；</li>
+</ul>
+</li>
+<li>mount 常用命令选项：</li>
+</ul>
+<pre><code>-t vsftype：指定要挂载的设备上的文件系统类型；
+-r: readonly，只读挂载；
+-w: read and write, 读写挂载；
+-n: 不更新/etc/mtab； 
+-a：自动挂载所有支持自动挂载的设备；(定义在了/etc/fstab文件中，且挂载选项中有“自动挂载”功能)
+-L 'LABEL': 以卷标指定挂载设备；
+-U 'UUID': 以UUID指定要挂载的设备；
+-B, --bind: 绑定目录到另一个目录上；
+		注意：查看内核追踪到的已挂载的所有设备：cat /proc/mounts
+-o options：(挂载文件系统的选项)
+	async：异步模式；
+	sync：同步模式；
+	atime/noatime：包含目录和文件；
+	diratime/nodiratime：目录的访问时间戳
+	auto/noauto：是否支持自动挂载
+	exec/noexec：是否支持将文件系统上应用程序运行为进程
+	dev/nodev：是否支持在此文件系统上使用设备文件；
+	suid/nosuid：
+	remount：重新挂载
+	ro：
+	rw:
+	user/nouser：是否允许普通用户挂载此设备
+	acl：启用此文件系统上的acl功能
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>注意：上述选项可多个同时使用，彼此使用逗号分隔；</p>
+<blockquote>
+<p>默认挂载选项：defaults<br>
+<strong>rw, suid, dev, exec, auto, nouser, and async</strong></p>
+</blockquote>
+</blockquote>
+<ul>
+<li>卸载方法：umount</li>
+</ul>
+<pre><code># umount DEVICE
+# umount MOUNT_POINT
+</code></pre>
+<ul>
+<li>查看正在访问指定文件系统的进程：</li>
+</ul>
+<p><code># fuser -v MOUNT_POINT</code></p>
+<ul>
+<li>终止所有在正访问指定的文件系统的进程：</li>
+</ul>
+<p><code># fuser -km MOUNT_POINT</code></p>
+<ul>
+<li>挂载交换分区：
+<ul>
+<li>启用：swapon</li>
+<li>语法：<code>swapon [OPTION]... [DEVICE]</code></li>
+</ul>
+<pre><code>swapon [OPTION]... [DEVICE]
+-a：激活所有的交换分区；
+-p PRIORITY：指定优先级；
+</code></pre>
+<ul>
+<li>禁用：<code>swapoff [OPTION]... [DEVICE]</code></li>
+</ul>
+</li>
+<li>内存空间使用状态：</li>
+</ul>
+<pre><code>free [OPTION]
+	-m: 以MB为单位
+	-g: 以GB为单位
+</code></pre>
+<ul>
+<li>文件系统空间占用等信息的查看工具：</li>
+</ul>
+<pre><code>df:
+	-h: human-readable
+	-i：inodes instead of blocks
+	-P: 以Posix兼容的格式输出; 
+</code></pre>
+<ul>
+<li>查看某目录总体空间占用状态：</li>
+</ul>
+<pre><code>du：
+du [OPTION]... DIR
+	-h: human-readable
+	-s: summary
+</code></pre>
+<blockquote>
+<p>命令总结：mount, umount, free, df, du, swapon, swapoff, fuser</p>
+</blockquote>
+<ul>
+<li>文件挂载的配置文件：<code>/etc/fstab</code>
+<ul>
+<li>每行定义一个要挂载的文件系统；
+<blockquote>
+<p>要挂载的设备或伪文件系统\挂载点\文件系统类型\挂载选项\转储频率\自检次序\</p>
+</blockquote>
+<ul>
+<li>
+<p>要挂载的设备或伪文件系统：</p>
+<ul>
+<li>设备文件、LABEL(LABEL=&quot;&quot;)、UUID(UUID=&quot;&quot;)、伪文件系统名称(proc, sysfs)</li>
+</ul>
+</li>
+<li>
+<p>挂载选项：</p>
+<ul>
+<li>defaults</li>
+</ul>
+</li>
+<li>
+<p>转储频率：</p>
+<ul>
+<li>0：不做备份</li>
+<li>1：每天转储</li>
+<li>2：每隔一天转储</li>
+</ul>
+</li>
+<li>
+<p>自检次序：</p>
+<ul>
+<li>0：不自检</li>
+<li>1：首先自检；一般只有rootfs才用1；</li>
+<li>...</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>文件系统上的其它概念：
+<ul>
+<li>Inode: Index Node, 索引节点</li>
+<li>地址指针：
+<ul>
+<li>直接指针：</li>
+<li>间接指针：</li>
+<li>三级指针：</li>
+<li>inode bitmap：对位标识每个inode空闲与否的状态信息；</li>
+</ul>
+</li>
+<li>链接文件：
+<ul>
+<li>硬链接：</li>
+<li>不能够对目录进行；</li>
+<li>不能跨分区进行；</li>
+<li>指向同一个inode的多个不同路径；创建文件的硬链接即为为inode创建新的引用路径，因此会增加其引用计数；</li>
+<li>符号链接：
+<ul>
+<li>可以对目录进行；</li>
+<li>可以跨分区；</li>
+<li>指向的是另一个文件的路径；其大小为指向的路径字符串的长度；不增加或减少目标文件inode的引用计数；</li>
+</ul>
+</li>
+</ul>
+<pre><code>ln [-sv] SRC DEST
+	-s：symbolic link
+	-v: verbose
+</code></pre>
+</li>
+<li>文件管理操作对文件的影响：
+<ul>
+<li>文件删除：</li>
+<li>文件复制：</li>
+<li>文件移动：</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[用户和组管理]]></title>
+        <id>https://orochw.github.io/post/yong-hu-he-zu-guan-li/</id>
+        <link href="https://orochw.github.io/post/yong-hu-he-zu-guan-li/">
+        </link>
+        <updated>2021-05-16T05:37:06.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="用户和组管理">用户和组管理</h2>
+<h3 id="1-资源分派">1. 资源分派：</h3>
+<ul>
+<li>
+<p>Authentication：认证</p>
+</li>
+<li>
+<p>Auhorization：授权</p>
+</li>
+<li>
+<p>Accouting：审计</p>
+<blockquote>
+<p>Audition</p>
+</blockquote>
+</li>
+<li>
+<p>token, identity(username/password)</p>
+</li>
+</ul>
+<h3 id="2-linux用户usernameuid">2. Linux用户：Username/UID</h3>
+<ul>
+<li>
+<p>管理员：root, 0</p>
+</li>
+<li>
+<p>普通用户：1-65535</p>
+</li>
+<li>
+<p>系统用户：1-499, 1-999</p>
+</li>
+<li>
+<p>对守护进程获取资源进行权限分配</p>
+<ul>
+<li>登录用户:500+, 1000+</li>
+</ul>
+</li>
+<li>
+<p>交互式登录</p>
+</li>
+</ul>
+<h3 id="3-linux组groupnamegid">3.     Linux组：Groupname/GID</h3>
+<ul>
+<li>管理员组：root, 0</li>
+<li>普通组：
+<ul>
+<li>系统组：1-499, 1-999</li>
+<li>普通组：500+, 1000+</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-linux安全上下文">4. Linux安全上下文：</h3>
+<ul>
+<li>运行中的程序：进程 (process)
+<ul>
+<li>以进程发起者的身份运行：
+<ul>
+<li>root: cat</li>
+<li>tom: cat</li>
+</ul>
+<blockquote>
+<p>进程所能够访问的所有资源的权限取决于进程的发起者的身份；</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-linux组的类别">5. Linux组的类别：</h3>
+<ul>
+<li>用户的基本组(主组)：</li>
+<li>组名同用户名，且仅包含一个用户：私有组</li>
+<li>用户的附加组(额外组)：</li>
+</ul>
+<h3 id="6linux用户和组相关的配置文件">6.Linux用户和组相关的配置文件：</h3>
+<blockquote>
+<p>/etc/passwd：#用户及其属性信息(名称、UID、基本组ID等等)；</p>
+</blockquote>
+<blockquote>
+<p>/etc/group：组及其属性信息；</p>
+</blockquote>
+<blockquote>
+<p>/etc/shadow：用户密码及其相关属性；</p>
+</blockquote>
+<blockquote>
+<p>/etc/gshadow：组密码及其相关属性；</p>
+</blockquote>
+<ul>
+<li>/etc/passwd：
+<blockquote>
+<p>name:password:UID:GID:GECOS:directory:shell</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p>用户名:密码<br>
+UID:GID:GECOS:主目录:默认shell</p>
+</blockquote>
+<ul>
+<li>
+<p>/etc/group：</p>
+<ul>
+<li>group_name:password:GID:user_list</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>组名:组密码:GID:以当前组为附加组的用户列表(分隔符为逗号)</p>
+</blockquote>
+<ul>
+<li>/etc/shadow</li>
+</ul>
+<blockquote>
+<p>用户名:加密了的密码:最近一次更改密码的日期:密码的最小使用期限:最大密码使用期限:密码警告时间段:密码禁用期:账户过期日期:保留字段</p>
+</blockquote>
+<ul>
+<li>
+<p>加密机制：</p>
+<ul>
+<li>
+<p>加密：明文--&gt; 密文</p>
+</li>
+<li>
+<p>解密：密文--&gt; 明文</p>
+</li>
+<li>
+<p>单向加密：提取数据指纹</p>
+<ul>
+<li>md5: message digest, 128bits</li>
+<li>sha1: secure hash algorithm, 160bits</li>
+<li>sha224: 224bits</li>
+<li>sha256: 256bits</li>
+<li>sha384: 384bits</li>
+<li>sha512: 512bits</li>
+</ul>
+<blockquote>
+<p>雪崩效应：初始的条件的微小改变，将会引起结果的巨大改变；</p>
+</blockquote>
+<blockquote>
+<p>定长输出：</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p>密码的复杂性策略：</p>
+<ul>
+<li>使用数字、大写字母、小写字母及特殊字符中至少3种；</li>
+<li>足够长；</li>
+<li>使用随机密码；</li>
+<li>定期更换；不要使用最近曾经使用过的密码；</li>
+</ul>
+</li>
+</ul>
+<h3 id="7用户和组相关的管理命令">7.用户和组相关的管理命令：</h3>
+<h4 id="用户创建useradd">用户创建：useradd</h4>
+<pre><code>useradd [options] LOGIN
+	-u UID: [UID_MIN, UID_MAX], 定义在/etc/login.defs
+	-g GID：指明用户所属基本组，可为组名，也可以GID；
+	-c &quot;COMMENT&quot;：用户的注释信息；
+	-d /PATH/TO/HOME_DIR: 以指定的路径为家目录；
+	-s SHELL: 指明用户的默认shell程序，可用列表在/etc/shells文件中；
+	-G GROUP1[,GROUP2,...[,GROUPN]]]：为用户指明附加组；组必须事先存在；
+	-r: 创建系统用户
+</code></pre>
+<blockquote>
+<p>CentOS 6: ID&lt;500</p>
+</blockquote>
+<blockquote>
+<p>CentOS 7: ID&lt;1000</p>
+</blockquote>
+<pre><code>默认值设定：/etc/default/useradd文件中
+	useradd -D 
+		-s SHELL
+</code></pre>
+<h4 id="组创建groupadd">组创建：groupadd</h4>
+<pre><code>groupadd [OPTION]... group_name
+
+	-g GID: 指明GID号；[GID_MIN, GID_MAX]
+	-r: 创建系统组；
+		CentOS 6: ID&lt;500
+		CentOS 7: ID&lt;1000
+</code></pre>
+<h4 id="查看用户相关的id信息id">查看用户相关的ID信息：id</h4>
+<pre><code>id [OPTION]... [USER]
+	-u: UID
+	-g: GID
+	-G: Groups
+	-n: Name
+</code></pre>
+<h4 id="切换用户或以其他用户身份执行命令su">切换用户或以其他用户身份执行命令：su</h4>
+<pre><code>su [options...] [-] [user [args...]]
+
+	切换用户的方式：
+		su UserName：非登录式切换，即不会读取目标用户的配置文件；
+		su - UserName：登录式切换，会读取目标用户的配置文件；完全切换；
+
+		Note：root su至其他用户无须密码；非root用户切换时需要密码；
+
+	换个身份执行命令：
+		su [-] UserName -c 'COMMAND'
+
+	选项：
+		-l：“su -l UserName”相当于“su - UserName”
+</code></pre>
+<h3 id="8用户属性修改usermod">8.用户属性修改：usermod</h3>
+<pre><code>usermod [OPTION] login
+
+	-u UID: 新UID
+	-g GID: 新基本组
+	-G GROUP1[,GROUP2,...[,GROUPN]]]：新附加组，原来的附加组将会被覆盖；若保留原有，则要同时使用-a选项，表示append；
+	-s SHELL：新的默认SHELL；
+	-c 'COMMENT'：新的注释信息；
+	-d HOME: 新的家目录；原有家目录中的文件不会同时移动至新的家目录；若要移动，则同时使用-m选项；
+	-l login_name: 新的名字；
+
+	-L: lock指定用户
+	-U: unlock指定用户
+
+	-e YYYY-MM-DD: 指明用户账号过期日期；
+	-f INACTIVE: 设定非活动期限；
+</code></pre>
+<h3 id="给用户添加密码passwd">给用户添加密码：passwd</h3>
+<pre><code>passwd [OPTIONS] UserName: 修改指定用户的密码，仅root用户权限
+passwd: 修改自己的密码；
+
+常用选项：
+	-l: 锁定指定用户
+	-u: 解锁指定用户
+	-n mindays: 指定最短使用期限
+	-x maxdays：最大使用期限
+	-w warndays：提前多少天开始警告
+	-i inactivedays：非活动期限；
+
+	--stdin：从标准输入接收用户密码；
+		echo &quot;PASSWORD&quot; | passwd --stdin USERNAME
+
+		Note: /dev/null, bit buckets
+		      /dev/zero, 
+</code></pre>
+<h3 id="删除用户userdel">删除用户：userdel</h3>
+<pre><code>userdel [OPTION]... login
+	-r: 删除用户家目录；
+</code></pre>
+<h3 id="组属性修改groupmod">组属性修改：groupmod</h3>
+<pre><code>groupmod [OPTION]... group
+	-n group_name: 新名字
+	-g GID: 新的GID；
+</code></pre>
+<h3 id="组删除groupdel">组删除：groupdel</h3>
+<pre><code>groupdel GROUP
+</code></pre>
+<h3 id="组密码gpasswd">组密码：gpasswd</h3>
+<pre><code>gpasswd [OPTION] GROUP
+	-a user: 将user添加至指定组中；
+	-d user: 删除用户user的以当前组为组名的附加组
+	-A user1,user2,...: 设置有管理权限的用户列表
+	newgrp命令：临时切换基本组；
+</code></pre>
+<blockquote>
+<p>如果用户本不属于此组，则需要组密码；</p>
+</blockquote>
+<h3 id="修改用户属性chage">修改用户属性：chage</h3>
+<pre><code>chage [OPTION]... LOGIN
+	-d LAST_DAY
+	-E, --expiredate EXPIRE_DATE
+	-I, --inactive INACTIVE
+	-m, --mindays MIN_DAYS
+	-M, --maxdays MAX_DAYS
+	-W, --warndays WARN_DAYS
+</code></pre>
+<blockquote>
+<p>其它命令：chfn, chsh, finger</p>
+</blockquote>
+<blockquote>
+<p>命令总结：useradd, groupadd, su, id, usermod, userdel, groupmod, groupdel, passwd, newgrp, pwck, gpasswd, chage, chsh, chfn, finger</p>
+</blockquote>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Linux程序包管理]]></title>
+        <id>https://orochw.github.io/post/linux-cheng-xu-bao-guan-li/</id>
+        <link href="https://orochw.github.io/post/linux-cheng-xu-bao-guan-li/">
+        </link>
+        <updated>2021-05-16T05:36:34.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="linux程序包管理">Linux程序包管理</h1>
+<ul>
+<li>
+<p>API：Application Programming Interface</p>
+</li>
+<li>
+<p>POSIX：Portable OS</p>
+<p>程序源代码 --&gt; 预处理 --&gt; 编译 --&gt; 汇编 --&gt; 链接</p>
+<p>静态编译：</p>
+<p>共享编译：.so</p>
+</li>
+<li>
+<p>ABI：Application Binary Interface</p>
+<blockquote>
+<p>Windows与Linux不兼容</p>
+</blockquote>
+<ul>
+<li>库级别的虚拟化：</li>
+<li>Linux: WINE</li>
+<li>Windows: Cywin</li>
+</ul>
+</li>
+<li>
+<p>系统级开发<br>
++ C<br>
++ C++</p>
+</li>
+<li>
+<p>应用级开发<br>
++ java<br>
++ Python<br>
++ php<br>
++ perl<br>
++ ruby</p>
+</li>
+<li>
+<p>二进制应用程序的组成部分：</p>
+<blockquote>
+<p>二进制文件、库文件、配置文件、帮助文件</p>
+</blockquote>
+<ul>
+<li>程序包管理器：
+<ul>
+<li>debian：deb, dpt</li>
+<li>redhat: rpm, rpm
+<ul>
+<li>rpm: Redhat Package Manager</li>
+<li>RPM is Package Manager<br>
++ Gentoo<br>
++ Archlinux</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>源代码：name-VERSION.tar.gz</p>
+<blockquote>
+<p>VERSION: major.minor.release</p>
+</blockquote>
+</li>
+<li>
+<p>rpm包命名方式：</p>
+<blockquote>
+<p>name-VERSION-release.arch.rpm</p>
+</blockquote>
+<ul>
+<li>
+<p>VERSION: major.minor.release</p>
+</li>
+<li>
+<p>release.arch：</p>
+<ul>
+<li>release：release.OS</li>
+</ul>
+</li>
+<li>
+<p>zlib-1.2.7-13.el7.i686.rpm</p>
+</li>
+<li>
+<p>常见的arch：</p>
+<ul>
+<li>x86: i386, i486, i586, i686</li>
+<li>x86_64: x64, x86_64, amd64</li>
+<li>powerpc: ppc</li>
+<li>跟平台无关：noarch</li>
+</ul>
+</li>
+<li>
+<p>testapp: 拆包</p>
+</li>
+<li>
+<p>testapp-VERSION-ARCH.rpm: 主包</p>
+</li>
+<li>
+<p>testapp-devel-VERSION-ARCH.rpm：支包</p>
+</li>
+<li>
+<p>testapp-testing-VERSION-ARHC.rpm</p>
+</li>
+<li>
+<p>包之间：存在依赖关系<br>
+X, Y, Z</p>
+<p>yum：rpm包管理器的前端工具；</p>
+<p>apt-get：deb包管理器前端工具;</p>
+<p>zypper: suse上的rpm前端管理工具；</p>
+<p>dnf: Fedora 22+ rpm包管理器前端管理工具；</p>
+</li>
+</ul>
+</li>
+<li>
+<p>查看二进制程序所依赖的库文件：</p>
+<pre><code>ldd /PATH/TO/BINARY_FILE
+</code></pre>
+</li>
+<li>
+<p>管理及查看本机装载的库文件：</p>
+<pre><code>ldconfig
+	/sbin/ldconfig -p: 显示本机已经缓存的所有可用库文件名及文件路径映射关系；
+		配置文件为：/etc/ld.so.conf, /etc/ld.so.conf.d/*.conf
+		缓存文件：/etc/ld.so.cache
+</code></pre>
+</li>
+<li>
+<p>程序包管理：</p>
+<blockquote>
+<p>功能：将编译好的应用程序的各组成文件打包一个或几个程序包文件，从而方便快捷地实现程序包的安装、卸载、查询、升级和校验等管理操作；</p>
+</blockquote>
+<ul>
+<li>1.成组成清单 (每个包独有)
+<ul>
+<li>文件清单</li>
+<li>安装或卸载时运行的脚本</li>
+</ul>
+</li>
+<li>2.数据库(公共)
+<ul>
+<li>程序包名称及版本</li>
+<li>依赖关系；</li>
+<li>功能说明；</li>
+<li>安装生成的各文件的文件路径及校验码信息；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>管理程序包的方式：</p>
+<ul>
+<li>使用包管理器：rpm</li>
+<li>使用前端工具：yum, dnf</li>
+</ul>
+</li>
+<li>
+<p>获取程序包的途径：</p>
+<ul>
+<li>系统发版的光盘或官方的服务器；
+<ul>
+<li>CentOS镜像：</li>
+</ul>
+<pre><code>  http://mirrors.aliyun.com
+  http://mirrors.sohu.com
+  http://mirrors.163.com
+</code></pre>
+</li>
+<li>项目官方站点</li>
+<li>第三方组织：
+<ul>
+<li>Fedora-EPEL</li>
+<li>搜索引擎：</li>
+</ul>
+<pre><code>http://pkgs.org
+http://rpmfind.net
+http://rpm.pbone.net
+</code></pre>
+</li>
+<li>自己制作</li>
+<li>建议：
+<ul>
+<li>检查其合法性</li>
+<li>来源合法性；</li>
+<li>程序包的完整性；</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="centos系统上rpm命令管理程序包">CentOS系统上rpm命令管理程序包：</h2>
+<blockquote>
+<p>安装、卸载、升级、查询、校验、数据库维护</p>
+</blockquote>
+<ul>
+<li>
+<p>安装：</p>
+<ul>
+<li>语法：<code>rpm {-i|--install} [install-options] PACKAGE_FILE ...</code><pre><code> -v: verbose
+	  	-vv: 
+	  	-h: 以#显示程序包管理执行进度；每个#表示2%的进度
+</code></pre>
+</li>
+<li>常见用法：<code>rpm -ivh PACKAGE_FILE ...</code></li>
+</ul>
+<pre><code>[install-options]
+--test: 测试安装，但不真正执行安装过程；dry run模式；
+--nodeps：忽略依赖关系；
+--replacepkgs: 重新安装；
+
+--nosignature: 不检查来源合法性；
+--nodigest：不检查包完整性；
+
+--noscipts：不执行程序包脚本片断；
+    %pre: 安装前脚本； --nopre
+    %post: 安装后脚本； --nopost
+    %preun: 卸载前脚本； --nopreun
+    %postun: 卸载后脚本；  --nopostun
+</code></pre>
+</li>
+<li>
+<p>升级：</p>
+<ul>
+<li>语法：</li>
+</ul>
+<pre><code>rpm {-U|--upgrade} [install-options] PACKAGE_FILE ...
+rpm {-F|--freshen} [install-options] PACKAGE_FILE ...
+</code></pre>
+<ul>
+<li>常见用法</li>
+</ul>
+<pre><code>  upgrage：安装有旧版程序包，则“升级”；如果不存在旧版程序包，则“安装”;
+  freeshen：安装有旧版程序包，则“升级”；如果不存在旧版程序包，则不执行升级操作；
+  
+  rpm -Uvh PACKAGE_FILE ...
+  rpm -Fvh PACKAGE_FILE ...
+  
+  --oldpackage：降级；
+  --force: 强行升级；
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p>tips：</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>不要对内核做升级操作；Linux支持多内核版本并存，因此，对直接安装新版本内核；</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>如果原程序包的配置文件安装后曾被修改，长级时，新版本的提供的同一个配置文件并不会直接覆盖老版本的配置文件，而把新版本的文件重命名(FILENAME.rpmnew)后保留；</p>
+</blockquote>
+</blockquote>
+<ul>
+<li>
+<p>查询：<code>rpm {-q|--query} [select-options] [query-options]</code></p>
+<ul>
+<li>常见用法</li>
+</ul>
+<pre><code>[select-options]
+-a: 所有包
+-f: 查看指定的文件由哪个程序包安装生成
+-p /PATH/TO/PACKAGE_FILE：针对尚未安装的程序包文件做查询操作；
+
+--whatprovides CAPABILITY：查询指定的CAPABILITY由哪个包所提供；
+--whatrequires CAPABILITY：查询指定的CAPABILITY被哪个包所依赖；
+
+[query-options]
+  --changelog：查询rpm包的changlog
+  -c: 查询程序的配置文件
+  -d: 查询程序的文档
+  -i: information
+  -l: 查看指定的程序包安装后生成的所有文件；
+  --scripts：程序包自带的脚本片断
+  -R: 查询指定的程序包所依赖的CAPABILITY；
+  --provides: 列出指定程序包所提供的CAPABILITY；
+
+常见
+  -qi PACKAGE, -qf FILE, -qc PACKAGE, -ql PACKAGE, -qd PACKAGE
+  -qpi PACKAGE_FILE, -qpl PACKAGE_FILE, ...
+  -qa
+</code></pre>
+</li>
+<li>
+<p>卸载：语法：<code>rpm {-e|--erase} [--allmatches] [--nodeps] [--noscripts] [--notriggers] [--test] PACKAGE_NAME ...</code></p>
+</li>
+<li>
+<p>校验：<br>
+语法：<code>rpm {-V|--verify} [select-options] [verify-options]</code></p>
+</li>
+</ul>
+<pre><code>S file Size differs
+M Mode differs (includes permissions and file type)
+5 digest (formerly MD5 sum) differs
+D Device major/minor number mismatch
+L readLink(2) path mismatch
+U User ownership differs
+G Group ownership differs
+T mTime differs
+P caPabilities differ
+</code></pre>
+<ul>
+<li>
+<p>包来源合法性验正及完整性验正：</p>
+<ul>
+<li>完整性验正：SHA256</li>
+<li>来源合法性验正：RSA</li>
+<li>公钥加密：
+<ul>
+<li>对称加密：加密、解密使用同一密钥；</li>
+<li>非对称加密：密钥是成对儿的，
+<ul>
+<li>public key: 公钥，公开所有人</li>
+<li>secret key: 私钥, 不能公开</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>导入所需要公钥：</li>
+</ul>
+<pre><code>  rpm --import /PATH/FROM/GPG-PUBKEY-FILE
+</code></pre>
+<p>CentOS 7发行版光盘提供的密钥文件：RPM-GPG-KEY-CentOS-7</p>
+</li>
+<li>
+<p>数据库重建：</p>
+<pre><code>rpm {--initdb|--rebuilddb}
+</code></pre>
+<ul>
+<li>initdb: 初始化<br>
+如果事先不存在数据库，则新建之；否则，不执行任何操作；</li>
+<li>rebuilddb：重建<br>
+无论当前存在与否，直接重新创建数据库；</li>
+</ul>
+</li>
+</ul>
+<h2 id="linux程序包管理2">Linux程序包管理(2)</h2>
+<ul>
+<li>
+<p>CentOS: yum, dnf</p>
+</li>
+<li>
+<p>URL: ftp://172.16.0.1/pub/</p>
+</li>
+<li>
+<p>YUM: yellow dog, Yellowdog Update Modifier</p>
+</li>
+<li>
+<p>yum repository: yum repo<br>
+存储了众多rpm包，以及包的相关的元数据文件（放置于特定目录下：repodata）；<br>
+文件服务器：</p>
+<pre><code>ftp://
+http://
+nfs://
+file:///
+</code></pre>
+</li>
+<li>
+<p>yum客户端：</p>
+<ul>
+<li>
+<p>配置文件：</p>
+<pre><code>/etc/yum.conf：为所有仓库提供公共配置
+/etc/yum.repos.d/*.repo：为仓库的指向提供配置
+</code></pre>
+</li>
+<li>
+<p>仓库指向的定义：</p>
+<pre><code>[repositoryID]
+name=Some name for this repository
+baseurl=url://path/to/repository/
+enabled={1|0}
+gpgcheck={1|0}
+gpgkey=URL
+enablegroups={1|0}
+failovermethod={roundrobin|priority}
+  默认为：roundrobin，意为随机挑选；
+Cost=
+  默认为1000
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>yum命令的用法：<code>yum [options] [command] [package ...]</code></p>
+<pre><code>List of Commands:
+  check          检查 RPM 数据库问题
+  check-update   检查是否有可用的软件包更新
+  clean          删除缓存数据
+  deplist        列出软件包的依赖关系
+  distribution-synchronization 已同步软件包到最新可用版本
+  downgrade      降级软件包
+  erase          从系统中移除一个或多个软件包
+  fs             Acts on the filesystem data of the host, mainly for removing docs/lanuages for minimal hosts.
+  fssnapshot     Creates filesystem snapshots, or lists/deletes current snapshots.
+  groups         显示或使用、组信息
+  history        显示或使用事务历史
+  info           显示关于软件包或组的详细信息
+  install        向系统中安装一个或多个软件包
+  list           列出一个或一组软件包
+  load-transaction 从文件名中加载一个已存事务
+  makecache      创建元数据缓存
+  provides       查找提供指定内容的软件包
+  reinstall      覆盖安装软件包
+  repo-pkgs      将一个源当作一个软件包组，这样我们就可以一次性安装/移除全部软件包。
+  repolist       显示已配置的源
+  search         在软件包详细信息中搜索指定字符串
+  shell          运行交互式的 yum shell
+  swap           Simple way to swap packages, instead of using shell
+  update         更新系统中的一个或多个软件包
+  update-minimal Works like upgrade, but goes to the 'newest' package match which fixes a problem that affects your system
+  updateinfo     Acts on repository update information
+  upgrade        更新软件包同时考虑软件包取代关系
+  version        显示机器和/或可用的源版本。
+  Options:
+    -h, --help            显示此帮助消息并退出
+    -t, --tolerant        忽略错误
+    -C, --cacheonly       完全从系统缓存运行，不升级缓存
+    -c [config file], --config=[config file]    
+                          配置文件路径
+    -R [minutes], --randomwait=[minutes]	      
+                          命令最长等待时间
+    -d [debug level], --debuglevel=[debug level]
+  		                      调试输出级别
+    --showduplicates      在 list/search 命令下，显示源里重复的条目
+    -e [error level], --errorlevel=[error level]
+                          错误输出级别
+    --rpmverbosity=[debug level name]
+                          RPM 调试输出级别
+    -q, --quiet           静默执行
+    -v, --verbose         详尽的操作过程
+    -y, --assumeyes       回答全部问题为是
+    --assumeno            回答全部问题为否
+    --version             显示 Yum 版本然后退出
+    --installroot=[path]  设置安装根目录
+    --enablerepo=[repo]   启用一个或多个软件源(支持通配符)
+    --disablerepo=[repo]  禁用一个或多个软件源(支持通配符)
+    -x [package], --exclude=[package]
+                          采用全名或通配符排除软件包
+    --disableexcludes=[repo]
+                          禁止从主配置，从源或者从任何位置排除
+    --disableincludes=[repo]
+                          disable includepkgs for a repo or for everything
+    --obsoletes           更新时处理软件包取代关系
+    --noplugins           禁用 Yum 插件
+    --nogpgcheck          禁用 GPG 签名检查
+    --disableplugin=[plugin]
+                          禁用指定名称的插件
+    --enableplugin=[plugin]
+                          启用指定名称的插件
+    --skip-broken         忽略存在依赖关系问题的软件包
+    --color=COLOR         配置是否使用颜色
+    --releasever=RELEASEVER
+                          在 yum 配置和 repo 文件里设置 $releasever 的值
+    --downloadonly        仅下载而不更新
+    --downloaddir=DLDIR   指定一个其他文件夹用于保存软件包
+    --setopt=SETOPTS      设置任意配置和源选项
+    --bugfix              Include bugfix relevant packages, in updates
+    --security            Include security relevant packages, in updates
+    --advisory=ADVS, --advisories=ADVS
+                          Include packages needed to fix the given advisory, in
+                          updates
+    --bzs=BZS             Include packages needed to fix the given BZ, in
+                          updates
+    --cves=CVES           Include packages needed to fix the given CVE, in
+                          updates
+    --sec-severity=SEVS, --secseverity=SEVS
+                          Include security relevant packages matching the
+                          severity, in updates
+</code></pre>
+</li>
+<li>
+<p>显示仓库列表：</p>
+<pre><code>repolist [all|enabled|disabled]
+</code></pre>
+</li>
+<li>
+<p>显示程序包：</p>
+<pre><code>list
+# yum list [all | glob_exp1] [glob_exp2] [...]
+# yum list {available|installed|updates} [glob_exp1] [...]
+</code></pre>
+</li>
+<li>
+<p>安装程序包：</p>
+<pre><code>install package1 [package2] [...]
+reinstall package1 [package2] [...]  (重新安装)
+</code></pre>
+</li>
+<li>
+<p>升级程序包：</p>
+<pre><code>update [package1] [package2] [...]
+downgrade package1 [package2] [...] (降级)
+</code></pre>
+</li>
+<li>
+<p>检查可用升级：</p>
+<pre><code>check-update
+</code></pre>
+</li>
+<li>
+<p>卸载程序包：</p>
+<pre><code>remove | erase package1 [package2] [...]
+</code></pre>
+</li>
+<li>
+<p>查看程序包information：</p>
+<pre><code>info [...]
+</code></pre>
+</li>
+<li>
+<p>查看指定的特性(可以是某文件)是由哪个程序包所提供：</p>
+<pre><code>provides | whatprovides feature1 [feature2] [...]
+</code></pre>
+</li>
+<li>
+<p>清理本地缓存：</p>
+<pre><code>clean [ packages | metadata | expire-cache | rpmdb | plugins | all ]
+</code></pre>
+</li>
+<li>
+<p>构建缓存：</p>
+<pre><code>makecache
+</code></pre>
+</li>
+<li>
+<p>搜索：</p>
+<pre><code>search string1 [string2] [...]
+</code></pre>
+<p>以指定的关键字搜索程序包名及summary信息；</p>
+</li>
+<li>
+<p>查看指定包所依赖的capabilities：</p>
+<pre><code>deplist package1 [package2] [...]
+</code></pre>
+</li>
+<li>
+<p>查看yum事务历史：</p>
+<pre><code>history [info|list|packages-list|packages-info|summary|addon-info|redo|undo|rollback|new|sync|stats]
+</code></pre>
+</li>
+<li>
+<p>安装及升级本地程序包：</p>
+<pre><code>* localinstall rpmfile1 [rpmfile2] [...]
+    (maintained for legacy reasons only - use install)
+* localupdate rpmfile1 [rpmfile2] [...]
+    (maintained for legacy reasons only - use update)
+</code></pre>
+</li>
+<li>
+<p>包组管理的相关命令：</p>
+<pre><code>* groupinstall group1 [group2] [...]
+* groupupdate group1 [group2] [...]
+* grouplist [hidden] [groupwildcard] [...]
+* groupremove group1 [group2] [...]
+* groupinfo group1 [...]
+</code></pre>
+</li>
+<li>
+<p>如何使用光盘当作本地yum仓库：</p>
+<pre><code>(1) 挂载光盘至某目录，例如/media/cdrom
+# mount -r -t iso9660 /dev/cdrom /media/cdrom
+(2) 创建配置文件
+[CentOS7]
+name=
+baseurl=
+gpgcheck=
+enabled=
+</code></pre>
+</li>
+<li>
+<p>yum的命令行选项：</p>
+<pre><code>--nogpgcheck：禁止进行gpg check；
+-y: 自动回答为“yes”；
+-q：静默模式；
+--disablerepo=repoidglob：临时禁用此处指定的repo；
+--enablerepo=repoidglob：临时启用此处指定的repo；
+--noplugins：禁用所有插件；
+</code></pre>
+</li>
+<li>
+<p>yum的repo配置文件中可用的变量：</p>
+<pre><code>$releasever: 当前OS的发行版的主版本号；
+$arch: 平台；
+$basearch：基础平台；
+$YUM0-$YUM9
+
+http://mirrors.magedu.com/centos/$releasever/$basearch/os
+</code></pre>
+</li>
+<li>
+<p>创建yum仓库：</p>
+<pre><code>createrepo [options] &lt;directory&gt;
+</code></pre>
+</li>
+<li>
+<p>程序包编译安装：</p>
+</li>
+</ul>
+<blockquote>
+<p>testapp-VERSION-release.src.rpm --&gt; 安装后，使用rpmbuild命令制作成二进制格式的rpm包，而后再安装；</p>
+</blockquote>
+<blockquote>
+<p>源代码 --&gt; 预处理 --&gt; 编译(gcc) --&gt; 汇编 --&gt; 链接 --&gt; 执行</p>
+</blockquote>
+<ul>
+<li>源代码组织格式：
+<ul>
+<li>
+<p>多文件：文件中的代码之间，很可能存在跨文件依赖关系；</p>
+</li>
+<li>
+<p>C、C++： make (configure --&gt; Makefile.in --&gt; makefile)</p>
+<blockquote>
+<p>java: maven</p>
+</blockquote>
+</li>
+<li>
+<p>C代码编译安装三步骤：</p>
+<ul>
+<li>./configure：</li>
+</ul>
+<p>通过选项传递参数，指定启用特性、安装路径等；执行时会参考用户的指定以及Makefile.in文件生成makefile；</p>
+<p>检查依赖到的外部环境；</p>
+<ul>
+<li>make：</li>
+</ul>
+<p>根据makefile文件，构建应用程序；</p>
+<ul>
+<li>make install</li>
+</ul>
+</li>
+<li>
+<p>开发工具：</p>
+<pre><code>autoconf: 生成configure脚本
+automake：生成Makefile.in
+</code></pre>
+<p><strong>建议：安装前查看INSTALL，README</strong></p>
+</li>
+</ul>
+</li>
+<li>开源程序源代码的获取：
+<ul>
+<li>官方自建站点：
+<ul>
+<li>apache.org (ASF)</li>
+<li>mariadb.org</li>
+<li>...</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>代码托管：
+<ul>
+<li>SourceForge</li>
+<li>Github.com</li>
+<li>code.google.com</li>
+</ul>
+</li>
+<li>编译C源代码：c/c++: gcc (GNU C Complier)
+<ul>
+<li>
+<p>前提：提供开发工具及开发环境</p>
+<ul>
+<li>开发工具：make, gcc等</li>
+<li>开发环境：开发库，头文件</li>
+</ul>
+<p>glibc：标准库</p>
+<ul>
+<li>通过“包组”提供开发组件</li>
+</ul>
+<p>CentOS 6: &quot;Development Tools&quot;, &quot;Server Platform Development&quot;,</p>
+</li>
+<li>
+<p>第一步：configure脚本</p>
+<blockquote>
+<p>选项：指定安装位置、指定启用的特性</p>
+</blockquote>
+<blockquote>
+<p>--help: 获取其支持使用的选项</p>
+</blockquote>
+<ul>
+<li>选项分类：</li>
+</ul>
+<pre><code>安装路径设定：
+--prefix=/PATH/TO/SOMEWHERE: 指定默认安装位置；默认为/usr/local/
+--sysconfdir=/PATH/TO/SOMEWHERE：配置文件安装位置；
+
+System types:
+
+Optional Features: 可选特性
+--disable-FEATURE
+--enable-FEATURE[=ARG]
+
+Optional Packages: 可选包
+--with-PACKAGE[=ARG]
+--without-PACKAGE
+</code></pre>
+</li>
+<li>
+<p>第二步：make</p>
+</li>
+<li>
+<p>第三步：make install</p>
+</li>
+</ul>
+</li>
+<li>安装后的配置：
+<ul>
+<li>
+<p>(1) 导出二进制程序目录至PATH环境变量中；</p>
+<p>编辑文件<code>/etc/profile.d/NAME.sh</code></p>
+<pre><code>export PATH=/PATH/TO/BIN:$PATH
+</code></pre>
+</li>
+<li>
+<p>(2) 导出库文件路径</p>
+<p>编辑<code>/etc/ld.so.conf.d/NAME.conf</code></p>
+<p>添加新的库文件所在目录至此文件中；</p>
+<p>让系统重新生成缓存：</p>
+<pre><code>ldconfig [-v]
+</code></pre>
+</li>
+<li>
+<p>(3) 导出头文件</p>
+<p>基于链接的方式实现：</p>
+<pre><code>ln -sv 
+</code></pre>
+</li>
+<li>
+<p>(4) 导出帮助手册</p>
+<p>编辑/etc/man.config文件</p>
+<p>添加一个MANPATH</p>
+</li>
+</ul>
+</li>
+</ul>
 ]]></content>
     </entry>
 </feed>

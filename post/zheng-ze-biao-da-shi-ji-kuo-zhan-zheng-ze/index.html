@@ -1,0 +1,594 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>正则表达式及扩展正则 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io//favicon.ico?v=1621149255031">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="正则表达式及扩展正则 | Gridea - Atom Feed" href="https://orochw.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="grep：
+
+Linux上文本处理三剑客
+
+
+grep：文本过滤(模式：pattern)工具;
+
+
+
+grep, egrep, fgrep
+
+
+
+sed：stream editor，文本编辑工具；
+
+
+awk：Linux上的实现gawk，文..." />
+    <meta name="keywords" content="杂记-Linux" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io/">
+  <img class="avatar" src="https://orochw.github.io//images/avatar.png?v=1621149255031" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              正则表达式及扩展正则
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-16
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/EKIlBm3oCT/" class="post-tag">
+                  # 杂记-Linux
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="grep">grep：</h2>
+<blockquote>
+<p>Linux上文本处理三剑客</p>
+</blockquote>
+<blockquote>
+<p>grep：文本过滤(模式：pattern)工具;</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>grep, egrep, fgrep</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>sed：stream editor，文本编辑工具；</p>
+</blockquote>
+<blockquote>
+<p>awk：Linux上的实现gawk，文本报告生成器；</p>
+</blockquote>
+<blockquote>
+<p>grep: Global search REgular expression and Print out the line.</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>作用：文本搜索工具，根据用户指定的“模式”对目标文本逐行进行匹配检查；打印匹配到的行；</p>
+<blockquote>
+<p>模式：由正则表达式字符及文本字符所编写的过滤条件；<br>
+REGEXP：由一类特殊字符及文本字符所编写的模式，其中有些字符不表示字符字面意义，而表示控制或通配的功能；<br>
+分两类：</p>
+<blockquote>
+<p>基本正则表达式：BRE<br>
+扩展正则表达式：ERE</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>grep -E, egrep</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<pre><code>正则表达式引擎
+	grep [OPTIONS] PATTERN [FILE...]
+	选项：
+		--color=auto: 对匹配到的文本着色显示；
+		-v: 显示不能够被pattern匹配到的行；
+		-i: 忽略字符大小写；
+		-o: 仅显示匹配到的字符串；
+		-q: 静默模式，不输出任何信息；
+		-A #：after, 后#行
+		-B #: before, 前#行
+		-C #：context, 前后各#行
+
+		-E：使用ERE；
+</code></pre>
+<ul>
+<li>
+<p>基本正则表达式元字符：</p>
+<ul>
+<li>字符匹配:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>字符匹配</th>
+<th>涵义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td>匹配任意单个字符</td>
+</tr>
+<tr>
+<td>[]</td>
+<td>匹配指定范围内的任意单个字符</td>
+</tr>
+<tr>
+<td>[^]</td>
+<td>匹配指定范围外的任意单个字符</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>字符集：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>字符集</th>
+<th>对应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[:digit:]</td>
+<td>任何数字</td>
+</tr>
+<tr>
+<td>[:lower:]</td>
+<td>任何小写字母</td>
+</tr>
+<tr>
+<td>[:upper:]</td>
+<td>任何大写字母</td>
+</tr>
+<tr>
+<td>[:alpha:]</td>
+<td>任何字母</td>
+</tr>
+<tr>
+<td>[:alnum:]</td>
+<td>任何字母和数字</td>
+</tr>
+<tr>
+<td>[:punct:]</td>
+<td>任何标点符号</td>
+</tr>
+<tr>
+<td>[:space:]</td>
+<td>任何空白字符</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>匹配次数：用在要指定次数的字符后面，用于指定前面的字符要出现的次数；</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>次数匹配</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>匹配前面的字符任意次</td>
+</tr>
+<tr>
+<td>?</td>
+<td>0或1次</td>
+</tr>
+<tr>
+<td>+</td>
+<td>1次或多次</td>
+</tr>
+<tr>
+<td>m</td>
+<td>匹配m次</td>
+</tr>
+<tr>
+<td>m,n</td>
+<td>至少m，至多n次</td>
+</tr>
+</tbody>
+</table>
+<pre><code>*：匹配前面的字符任意次；
+	例如: grep &quot;x*y&quot; 
+		abxy
+		xay
+		xxxxxxy
+</code></pre>
+<ul>
+<li>贪婪模式</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>匹配规则</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.*</td>
+<td>任意长度的任意字符</td>
+</tr>
+<tr>
+<td>?</td>
+<td>匹配其前面的字符0或1次；即前面的可有可无</td>
+</tr>
+<tr>
+<td>+</td>
+<td>匹配其前面的字符至少1次</td>
+</tr>
+<tr>
+<td>{m}</td>
+<td>匹配前面的字符m次</td>
+</tr>
+<tr>
+<td>{m,n}</td>
+<td>匹配前面的字符至少m次，至多n次</td>
+</tr>
+<tr>
+<td>{0,n}</td>
+<td>匹配前面的字符至多n次</td>
+</tr>
+<tr>
+<td>{m,}</td>
+<td>匹配前面的字符至少m次</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>位置锚定：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>匹配规则</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>^</td>
+<td>行首锚定；用于模式的最左侧</td>
+</tr>
+<tr>
+<td>$</td>
+<td>行尾锚定；用于模式的最右侧</td>
+</tr>
+<tr>
+<td>^PATTERN$</td>
+<td>用于模式匹配整行</td>
+</tr>
+<tr>
+<td>^$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>*$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td>&lt; 或 \b</td>
+<td>词首锚定；用于单词模式的左侧</td>
+</tr>
+<tr>
+<td>&gt; 或 \b</td>
+<td>词尾锚定；用于单词模式的右侧</td>
+</tr>
+<tr>
+<td>&lt;PATTERN&gt;</td>
+<td>匹配整个单词</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>分组：
+<ul>
+<li>()：将一个或多个字符捆绑在一起，当作一个整体进行处理；
+<ul>
+<li>(xy)*ab</li>
+</ul>
+</li>
+<li>Note: 分组括号中的模式匹配到的内容会被正则表达式引擎记录于内部的变量中，这些变量的命名方式为: \1, \2, \3, ...
+<ul>
+<li>\1: 从左侧起，第一个左括号以及与之匹配右括号之间的模式所匹配到的字符；
+<ul>
+<li>(ab+(xy)*)：
+<ul>
+<li>\1: ab+(xy)*</li>
+<li>\2: xy</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>后向引用：引用前面的分组括号中的模式所匹配字符，(而非模式本身)</p>
+</blockquote>
+<h2 id="egrep及扩展的正则表达式">egrep及扩展的正则表达式</h2>
+<blockquote>
+<p>egrep = grep -E</p>
+</blockquote>
+<p>语法：<code>egrep [OPTIONS] PATTERN [FILE...]</code></p>
+<h3 id="扩展正则表达式的元字符">扩展正则表达式的元字符：</h3>
+<table>
+<thead>
+<tr>
+<th>字符匹配</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td>匹配任意单个字符</td>
+</tr>
+<tr>
+<td>[]</td>
+<td>匹配指定范围内的任意单个字符]</td>
+</tr>
+<tr>
+<td>[^]</td>
+<td>匹配指定范围外的任意单个字符</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>次数匹配</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>匹配前面的字符任意次</td>
+</tr>
+<tr>
+<td>?</td>
+<td>0或1次</td>
+</tr>
+<tr>
+<td>+</td>
+<td>1次或多次</td>
+</tr>
+<tr>
+<td>m</td>
+<td>匹配m次</td>
+</tr>
+<tr>
+<td>m,n</td>
+<td>至少m，至多n次</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>匹配规则</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>^</td>
+<td>行首锚定；用于模式的最左侧</td>
+</tr>
+<tr>
+<td>$</td>
+<td>行尾锚定；用于模式的最右侧</td>
+</tr>
+<tr>
+<td>^PATTERN$</td>
+<td>用于模式匹配整行</td>
+</tr>
+<tr>
+<td>^$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td><sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>*$</td>
+<td>空行</td>
+</tr>
+<tr>
+<td>&lt; 或 \b</td>
+<td>词首锚定；用于单词模式的左侧</td>
+</tr>
+<tr>
+<td>&gt; 或 \b</td>
+<td>词尾锚定；用于单词模式的右侧</td>
+</tr>
+<tr>
+<td>&lt;PATTERN&gt;</td>
+<td>匹配整个单词</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>或者：</p>
+<blockquote>
+<p>a|b</p>
+<blockquote>
+<p>C|cat: C或cat</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>[:space:] <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>[:space:] <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#grep">grep：</a></li>
+<li><a href="#egrep%E5%8F%8A%E6%89%A9%E5%B1%95%E7%9A%84%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F">egrep及扩展的正则表达式</a>
+<ul>
+<li><a href="#%E6%89%A9%E5%B1%95%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E7%9A%84%E5%85%83%E5%AD%97%E7%AC%A6">扩展正则表达式的元字符：</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/quan-xian-guan-li/">
+              <h3 class="post-title">
+                权限管理：
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

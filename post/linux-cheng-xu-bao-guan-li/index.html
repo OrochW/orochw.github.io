@@ -1,0 +1,920 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Linux程序包管理 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io//favicon.ico?v=1621149255031">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Linux程序包管理 | Gridea - Atom Feed" href="https://orochw.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Linux程序包管理
+
+
+API：Application Programming Interface
+
+
+POSIX：Portable OS
+程序源代码 --&gt; 预处理 --&gt; 编译 --&gt; 汇编 --&gt; 链接
+静态..." />
+    <meta name="keywords" content="杂记-Linux" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io/">
+  <img class="avatar" src="https://orochw.github.io//images/avatar.png?v=1621149255031" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Linux程序包管理
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-16
+              </span>
+              <span>
+                14 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/EKIlBm3oCT/" class="post-tag">
+                  # 杂记-Linux
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h1 id="linux程序包管理">Linux程序包管理</h1>
+<ul>
+<li>
+<p>API：Application Programming Interface</p>
+</li>
+<li>
+<p>POSIX：Portable OS</p>
+<p>程序源代码 --&gt; 预处理 --&gt; 编译 --&gt; 汇编 --&gt; 链接</p>
+<p>静态编译：</p>
+<p>共享编译：.so</p>
+</li>
+<li>
+<p>ABI：Application Binary Interface</p>
+<blockquote>
+<p>Windows与Linux不兼容</p>
+</blockquote>
+<ul>
+<li>库级别的虚拟化：</li>
+<li>Linux: WINE</li>
+<li>Windows: Cywin</li>
+</ul>
+</li>
+<li>
+<p>系统级开发<br>
++ C<br>
++ C++</p>
+</li>
+<li>
+<p>应用级开发<br>
++ java<br>
++ Python<br>
++ php<br>
++ perl<br>
++ ruby</p>
+</li>
+<li>
+<p>二进制应用程序的组成部分：</p>
+<blockquote>
+<p>二进制文件、库文件、配置文件、帮助文件</p>
+</blockquote>
+<ul>
+<li>程序包管理器：
+<ul>
+<li>debian：deb, dpt</li>
+<li>redhat: rpm, rpm
+<ul>
+<li>rpm: Redhat Package Manager</li>
+<li>RPM is Package Manager<br>
++ Gentoo<br>
++ Archlinux</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>源代码：name-VERSION.tar.gz</p>
+<blockquote>
+<p>VERSION: major.minor.release</p>
+</blockquote>
+</li>
+<li>
+<p>rpm包命名方式：</p>
+<blockquote>
+<p>name-VERSION-release.arch.rpm</p>
+</blockquote>
+<ul>
+<li>
+<p>VERSION: major.minor.release</p>
+</li>
+<li>
+<p>release.arch：</p>
+<ul>
+<li>release：release.OS</li>
+</ul>
+</li>
+<li>
+<p>zlib-1.2.7-13.el7.i686.rpm</p>
+</li>
+<li>
+<p>常见的arch：</p>
+<ul>
+<li>x86: i386, i486, i586, i686</li>
+<li>x86_64: x64, x86_64, amd64</li>
+<li>powerpc: ppc</li>
+<li>跟平台无关：noarch</li>
+</ul>
+</li>
+<li>
+<p>testapp: 拆包</p>
+</li>
+<li>
+<p>testapp-VERSION-ARCH.rpm: 主包</p>
+</li>
+<li>
+<p>testapp-devel-VERSION-ARCH.rpm：支包</p>
+</li>
+<li>
+<p>testapp-testing-VERSION-ARHC.rpm</p>
+</li>
+<li>
+<p>包之间：存在依赖关系<br>
+X, Y, Z</p>
+<p>yum：rpm包管理器的前端工具；</p>
+<p>apt-get：deb包管理器前端工具;</p>
+<p>zypper: suse上的rpm前端管理工具；</p>
+<p>dnf: Fedora 22+ rpm包管理器前端管理工具；</p>
+</li>
+</ul>
+</li>
+<li>
+<p>查看二进制程序所依赖的库文件：</p>
+<pre><code>ldd /PATH/TO/BINARY_FILE
+</code></pre>
+</li>
+<li>
+<p>管理及查看本机装载的库文件：</p>
+<pre><code>ldconfig
+	/sbin/ldconfig -p: 显示本机已经缓存的所有可用库文件名及文件路径映射关系；
+		配置文件为：/etc/ld.so.conf, /etc/ld.so.conf.d/*.conf
+		缓存文件：/etc/ld.so.cache
+</code></pre>
+</li>
+<li>
+<p>程序包管理：</p>
+<blockquote>
+<p>功能：将编译好的应用程序的各组成文件打包一个或几个程序包文件，从而方便快捷地实现程序包的安装、卸载、查询、升级和校验等管理操作；</p>
+</blockquote>
+<ul>
+<li>1.成组成清单 (每个包独有)
+<ul>
+<li>文件清单</li>
+<li>安装或卸载时运行的脚本</li>
+</ul>
+</li>
+<li>2.数据库(公共)
+<ul>
+<li>程序包名称及版本</li>
+<li>依赖关系；</li>
+<li>功能说明；</li>
+<li>安装生成的各文件的文件路径及校验码信息；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>管理程序包的方式：</p>
+<ul>
+<li>使用包管理器：rpm</li>
+<li>使用前端工具：yum, dnf</li>
+</ul>
+</li>
+<li>
+<p>获取程序包的途径：</p>
+<ul>
+<li>系统发版的光盘或官方的服务器；
+<ul>
+<li>CentOS镜像：</li>
+</ul>
+<pre><code>  http://mirrors.aliyun.com
+  http://mirrors.sohu.com
+  http://mirrors.163.com
+</code></pre>
+</li>
+<li>项目官方站点</li>
+<li>第三方组织：
+<ul>
+<li>Fedora-EPEL</li>
+<li>搜索引擎：</li>
+</ul>
+<pre><code>http://pkgs.org
+http://rpmfind.net
+http://rpm.pbone.net
+</code></pre>
+</li>
+<li>自己制作</li>
+<li>建议：
+<ul>
+<li>检查其合法性</li>
+<li>来源合法性；</li>
+<li>程序包的完整性；</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="centos系统上rpm命令管理程序包">CentOS系统上rpm命令管理程序包：</h2>
+<blockquote>
+<p>安装、卸载、升级、查询、校验、数据库维护</p>
+</blockquote>
+<ul>
+<li>
+<p>安装：</p>
+<ul>
+<li>语法：<code>rpm {-i|--install} [install-options] PACKAGE_FILE ...</code><pre><code> -v: verbose
+	  	-vv: 
+	  	-h: 以#显示程序包管理执行进度；每个#表示2%的进度
+</code></pre>
+</li>
+<li>常见用法：<code>rpm -ivh PACKAGE_FILE ...</code></li>
+</ul>
+<pre><code>[install-options]
+--test: 测试安装，但不真正执行安装过程；dry run模式；
+--nodeps：忽略依赖关系；
+--replacepkgs: 重新安装；
+
+--nosignature: 不检查来源合法性；
+--nodigest：不检查包完整性；
+
+--noscipts：不执行程序包脚本片断；
+    %pre: 安装前脚本； --nopre
+    %post: 安装后脚本； --nopost
+    %preun: 卸载前脚本； --nopreun
+    %postun: 卸载后脚本；  --nopostun
+</code></pre>
+</li>
+<li>
+<p>升级：</p>
+<ul>
+<li>语法：</li>
+</ul>
+<pre><code>rpm {-U|--upgrade} [install-options] PACKAGE_FILE ...
+rpm {-F|--freshen} [install-options] PACKAGE_FILE ...
+</code></pre>
+<ul>
+<li>常见用法</li>
+</ul>
+<pre><code>  upgrage：安装有旧版程序包，则“升级”；如果不存在旧版程序包，则“安装”;
+  freeshen：安装有旧版程序包，则“升级”；如果不存在旧版程序包，则不执行升级操作；
+  
+  rpm -Uvh PACKAGE_FILE ...
+  rpm -Fvh PACKAGE_FILE ...
+  
+  --oldpackage：降级；
+  --force: 强行升级；
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p>tips：</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>不要对内核做升级操作；Linux支持多内核版本并存，因此，对直接安装新版本内核；</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>如果原程序包的配置文件安装后曾被修改，长级时，新版本的提供的同一个配置文件并不会直接覆盖老版本的配置文件，而把新版本的文件重命名(FILENAME.rpmnew)后保留；</p>
+</blockquote>
+</blockquote>
+<ul>
+<li>
+<p>查询：<code>rpm {-q|--query} [select-options] [query-options]</code></p>
+<ul>
+<li>常见用法</li>
+</ul>
+<pre><code>[select-options]
+-a: 所有包
+-f: 查看指定的文件由哪个程序包安装生成
+-p /PATH/TO/PACKAGE_FILE：针对尚未安装的程序包文件做查询操作；
+
+--whatprovides CAPABILITY：查询指定的CAPABILITY由哪个包所提供；
+--whatrequires CAPABILITY：查询指定的CAPABILITY被哪个包所依赖；
+
+[query-options]
+  --changelog：查询rpm包的changlog
+  -c: 查询程序的配置文件
+  -d: 查询程序的文档
+  -i: information
+  -l: 查看指定的程序包安装后生成的所有文件；
+  --scripts：程序包自带的脚本片断
+  -R: 查询指定的程序包所依赖的CAPABILITY；
+  --provides: 列出指定程序包所提供的CAPABILITY；
+
+常见
+  -qi PACKAGE, -qf FILE, -qc PACKAGE, -ql PACKAGE, -qd PACKAGE
+  -qpi PACKAGE_FILE, -qpl PACKAGE_FILE, ...
+  -qa
+</code></pre>
+</li>
+<li>
+<p>卸载：语法：<code>rpm {-e|--erase} [--allmatches] [--nodeps] [--noscripts] [--notriggers] [--test] PACKAGE_NAME ...</code></p>
+</li>
+<li>
+<p>校验：<br>
+语法：<code>rpm {-V|--verify} [select-options] [verify-options]</code></p>
+</li>
+</ul>
+<pre><code>S file Size differs
+M Mode differs (includes permissions and file type)
+5 digest (formerly MD5 sum) differs
+D Device major/minor number mismatch
+L readLink(2) path mismatch
+U User ownership differs
+G Group ownership differs
+T mTime differs
+P caPabilities differ
+</code></pre>
+<ul>
+<li>
+<p>包来源合法性验正及完整性验正：</p>
+<ul>
+<li>完整性验正：SHA256</li>
+<li>来源合法性验正：RSA</li>
+<li>公钥加密：
+<ul>
+<li>对称加密：加密、解密使用同一密钥；</li>
+<li>非对称加密：密钥是成对儿的，
+<ul>
+<li>public key: 公钥，公开所有人</li>
+<li>secret key: 私钥, 不能公开</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>导入所需要公钥：</li>
+</ul>
+<pre><code>  rpm --import /PATH/FROM/GPG-PUBKEY-FILE
+</code></pre>
+<p>CentOS 7发行版光盘提供的密钥文件：RPM-GPG-KEY-CentOS-7</p>
+</li>
+<li>
+<p>数据库重建：</p>
+<pre><code>rpm {--initdb|--rebuilddb}
+</code></pre>
+<ul>
+<li>initdb: 初始化<br>
+如果事先不存在数据库，则新建之；否则，不执行任何操作；</li>
+<li>rebuilddb：重建<br>
+无论当前存在与否，直接重新创建数据库；</li>
+</ul>
+</li>
+</ul>
+<h2 id="linux程序包管理2">Linux程序包管理(2)</h2>
+<ul>
+<li>
+<p>CentOS: yum, dnf</p>
+</li>
+<li>
+<p>URL: ftp://172.16.0.1/pub/</p>
+</li>
+<li>
+<p>YUM: yellow dog, Yellowdog Update Modifier</p>
+</li>
+<li>
+<p>yum repository: yum repo<br>
+存储了众多rpm包，以及包的相关的元数据文件（放置于特定目录下：repodata）；<br>
+文件服务器：</p>
+<pre><code>ftp://
+http://
+nfs://
+file:///
+</code></pre>
+</li>
+<li>
+<p>yum客户端：</p>
+<ul>
+<li>
+<p>配置文件：</p>
+<pre><code>/etc/yum.conf：为所有仓库提供公共配置
+/etc/yum.repos.d/*.repo：为仓库的指向提供配置
+</code></pre>
+</li>
+<li>
+<p>仓库指向的定义：</p>
+<pre><code>[repositoryID]
+name=Some name for this repository
+baseurl=url://path/to/repository/
+enabled={1|0}
+gpgcheck={1|0}
+gpgkey=URL
+enablegroups={1|0}
+failovermethod={roundrobin|priority}
+  默认为：roundrobin，意为随机挑选；
+Cost=
+  默认为1000
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>yum命令的用法：<code>yum [options] [command] [package ...]</code></p>
+<pre><code>List of Commands:
+  check          检查 RPM 数据库问题
+  check-update   检查是否有可用的软件包更新
+  clean          删除缓存数据
+  deplist        列出软件包的依赖关系
+  distribution-synchronization 已同步软件包到最新可用版本
+  downgrade      降级软件包
+  erase          从系统中移除一个或多个软件包
+  fs             Acts on the filesystem data of the host, mainly for removing docs/lanuages for minimal hosts.
+  fssnapshot     Creates filesystem snapshots, or lists/deletes current snapshots.
+  groups         显示或使用、组信息
+  history        显示或使用事务历史
+  info           显示关于软件包或组的详细信息
+  install        向系统中安装一个或多个软件包
+  list           列出一个或一组软件包
+  load-transaction 从文件名中加载一个已存事务
+  makecache      创建元数据缓存
+  provides       查找提供指定内容的软件包
+  reinstall      覆盖安装软件包
+  repo-pkgs      将一个源当作一个软件包组，这样我们就可以一次性安装/移除全部软件包。
+  repolist       显示已配置的源
+  search         在软件包详细信息中搜索指定字符串
+  shell          运行交互式的 yum shell
+  swap           Simple way to swap packages, instead of using shell
+  update         更新系统中的一个或多个软件包
+  update-minimal Works like upgrade, but goes to the 'newest' package match which fixes a problem that affects your system
+  updateinfo     Acts on repository update information
+  upgrade        更新软件包同时考虑软件包取代关系
+  version        显示机器和/或可用的源版本。
+  Options:
+    -h, --help            显示此帮助消息并退出
+    -t, --tolerant        忽略错误
+    -C, --cacheonly       完全从系统缓存运行，不升级缓存
+    -c [config file], --config=[config file]    
+                          配置文件路径
+    -R [minutes], --randomwait=[minutes]	      
+                          命令最长等待时间
+    -d [debug level], --debuglevel=[debug level]
+  		                      调试输出级别
+    --showduplicates      在 list/search 命令下，显示源里重复的条目
+    -e [error level], --errorlevel=[error level]
+                          错误输出级别
+    --rpmverbosity=[debug level name]
+                          RPM 调试输出级别
+    -q, --quiet           静默执行
+    -v, --verbose         详尽的操作过程
+    -y, --assumeyes       回答全部问题为是
+    --assumeno            回答全部问题为否
+    --version             显示 Yum 版本然后退出
+    --installroot=[path]  设置安装根目录
+    --enablerepo=[repo]   启用一个或多个软件源(支持通配符)
+    --disablerepo=[repo]  禁用一个或多个软件源(支持通配符)
+    -x [package], --exclude=[package]
+                          采用全名或通配符排除软件包
+    --disableexcludes=[repo]
+                          禁止从主配置，从源或者从任何位置排除
+    --disableincludes=[repo]
+                          disable includepkgs for a repo or for everything
+    --obsoletes           更新时处理软件包取代关系
+    --noplugins           禁用 Yum 插件
+    --nogpgcheck          禁用 GPG 签名检查
+    --disableplugin=[plugin]
+                          禁用指定名称的插件
+    --enableplugin=[plugin]
+                          启用指定名称的插件
+    --skip-broken         忽略存在依赖关系问题的软件包
+    --color=COLOR         配置是否使用颜色
+    --releasever=RELEASEVER
+                          在 yum 配置和 repo 文件里设置 $releasever 的值
+    --downloadonly        仅下载而不更新
+    --downloaddir=DLDIR   指定一个其他文件夹用于保存软件包
+    --setopt=SETOPTS      设置任意配置和源选项
+    --bugfix              Include bugfix relevant packages, in updates
+    --security            Include security relevant packages, in updates
+    --advisory=ADVS, --advisories=ADVS
+                          Include packages needed to fix the given advisory, in
+                          updates
+    --bzs=BZS             Include packages needed to fix the given BZ, in
+                          updates
+    --cves=CVES           Include packages needed to fix the given CVE, in
+                          updates
+    --sec-severity=SEVS, --secseverity=SEVS
+                          Include security relevant packages matching the
+                          severity, in updates
+</code></pre>
+</li>
+<li>
+<p>显示仓库列表：</p>
+<pre><code>repolist [all|enabled|disabled]
+</code></pre>
+</li>
+<li>
+<p>显示程序包：</p>
+<pre><code>list
+# yum list [all | glob_exp1] [glob_exp2] [...]
+# yum list {available|installed|updates} [glob_exp1] [...]
+</code></pre>
+</li>
+<li>
+<p>安装程序包：</p>
+<pre><code>install package1 [package2] [...]
+reinstall package1 [package2] [...]  (重新安装)
+</code></pre>
+</li>
+<li>
+<p>升级程序包：</p>
+<pre><code>update [package1] [package2] [...]
+downgrade package1 [package2] [...] (降级)
+</code></pre>
+</li>
+<li>
+<p>检查可用升级：</p>
+<pre><code>check-update
+</code></pre>
+</li>
+<li>
+<p>卸载程序包：</p>
+<pre><code>remove | erase package1 [package2] [...]
+</code></pre>
+</li>
+<li>
+<p>查看程序包information：</p>
+<pre><code>info [...]
+</code></pre>
+</li>
+<li>
+<p>查看指定的特性(可以是某文件)是由哪个程序包所提供：</p>
+<pre><code>provides | whatprovides feature1 [feature2] [...]
+</code></pre>
+</li>
+<li>
+<p>清理本地缓存：</p>
+<pre><code>clean [ packages | metadata | expire-cache | rpmdb | plugins | all ]
+</code></pre>
+</li>
+<li>
+<p>构建缓存：</p>
+<pre><code>makecache
+</code></pre>
+</li>
+<li>
+<p>搜索：</p>
+<pre><code>search string1 [string2] [...]
+</code></pre>
+<p>以指定的关键字搜索程序包名及summary信息；</p>
+</li>
+<li>
+<p>查看指定包所依赖的capabilities：</p>
+<pre><code>deplist package1 [package2] [...]
+</code></pre>
+</li>
+<li>
+<p>查看yum事务历史：</p>
+<pre><code>history [info|list|packages-list|packages-info|summary|addon-info|redo|undo|rollback|new|sync|stats]
+</code></pre>
+</li>
+<li>
+<p>安装及升级本地程序包：</p>
+<pre><code>* localinstall rpmfile1 [rpmfile2] [...]
+    (maintained for legacy reasons only - use install)
+* localupdate rpmfile1 [rpmfile2] [...]
+    (maintained for legacy reasons only - use update)
+</code></pre>
+</li>
+<li>
+<p>包组管理的相关命令：</p>
+<pre><code>* groupinstall group1 [group2] [...]
+* groupupdate group1 [group2] [...]
+* grouplist [hidden] [groupwildcard] [...]
+* groupremove group1 [group2] [...]
+* groupinfo group1 [...]
+</code></pre>
+</li>
+<li>
+<p>如何使用光盘当作本地yum仓库：</p>
+<pre><code>(1) 挂载光盘至某目录，例如/media/cdrom
+# mount -r -t iso9660 /dev/cdrom /media/cdrom
+(2) 创建配置文件
+[CentOS7]
+name=
+baseurl=
+gpgcheck=
+enabled=
+</code></pre>
+</li>
+<li>
+<p>yum的命令行选项：</p>
+<pre><code>--nogpgcheck：禁止进行gpg check；
+-y: 自动回答为“yes”；
+-q：静默模式；
+--disablerepo=repoidglob：临时禁用此处指定的repo；
+--enablerepo=repoidglob：临时启用此处指定的repo；
+--noplugins：禁用所有插件；
+</code></pre>
+</li>
+<li>
+<p>yum的repo配置文件中可用的变量：</p>
+<pre><code>$releasever: 当前OS的发行版的主版本号；
+$arch: 平台；
+$basearch：基础平台；
+$YUM0-$YUM9
+
+http://mirrors.magedu.com/centos/$releasever/$basearch/os
+</code></pre>
+</li>
+<li>
+<p>创建yum仓库：</p>
+<pre><code>createrepo [options] &lt;directory&gt;
+</code></pre>
+</li>
+<li>
+<p>程序包编译安装：</p>
+</li>
+</ul>
+<blockquote>
+<p>testapp-VERSION-release.src.rpm --&gt; 安装后，使用rpmbuild命令制作成二进制格式的rpm包，而后再安装；</p>
+</blockquote>
+<blockquote>
+<p>源代码 --&gt; 预处理 --&gt; 编译(gcc) --&gt; 汇编 --&gt; 链接 --&gt; 执行</p>
+</blockquote>
+<ul>
+<li>源代码组织格式：
+<ul>
+<li>
+<p>多文件：文件中的代码之间，很可能存在跨文件依赖关系；</p>
+</li>
+<li>
+<p>C、C++： make (configure --&gt; Makefile.in --&gt; makefile)</p>
+<blockquote>
+<p>java: maven</p>
+</blockquote>
+</li>
+<li>
+<p>C代码编译安装三步骤：</p>
+<ul>
+<li>./configure：</li>
+</ul>
+<p>通过选项传递参数，指定启用特性、安装路径等；执行时会参考用户的指定以及Makefile.in文件生成makefile；</p>
+<p>检查依赖到的外部环境；</p>
+<ul>
+<li>make：</li>
+</ul>
+<p>根据makefile文件，构建应用程序；</p>
+<ul>
+<li>make install</li>
+</ul>
+</li>
+<li>
+<p>开发工具：</p>
+<pre><code>autoconf: 生成configure脚本
+automake：生成Makefile.in
+</code></pre>
+<p><strong>建议：安装前查看INSTALL，README</strong></p>
+</li>
+</ul>
+</li>
+<li>开源程序源代码的获取：
+<ul>
+<li>官方自建站点：
+<ul>
+<li>apache.org (ASF)</li>
+<li>mariadb.org</li>
+<li>...</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>代码托管：
+<ul>
+<li>SourceForge</li>
+<li>Github.com</li>
+<li>code.google.com</li>
+</ul>
+</li>
+<li>编译C源代码：c/c++: gcc (GNU C Complier)
+<ul>
+<li>
+<p>前提：提供开发工具及开发环境</p>
+<ul>
+<li>开发工具：make, gcc等</li>
+<li>开发环境：开发库，头文件</li>
+</ul>
+<p>glibc：标准库</p>
+<ul>
+<li>通过“包组”提供开发组件</li>
+</ul>
+<p>CentOS 6: &quot;Development Tools&quot;, &quot;Server Platform Development&quot;,</p>
+</li>
+<li>
+<p>第一步：configure脚本</p>
+<blockquote>
+<p>选项：指定安装位置、指定启用的特性</p>
+</blockquote>
+<blockquote>
+<p>--help: 获取其支持使用的选项</p>
+</blockquote>
+<ul>
+<li>选项分类：</li>
+</ul>
+<pre><code>安装路径设定：
+--prefix=/PATH/TO/SOMEWHERE: 指定默认安装位置；默认为/usr/local/
+--sysconfdir=/PATH/TO/SOMEWHERE：配置文件安装位置；
+
+System types:
+
+Optional Features: 可选特性
+--disable-FEATURE
+--enable-FEATURE[=ARG]
+
+Optional Packages: 可选包
+--with-PACKAGE[=ARG]
+--without-PACKAGE
+</code></pre>
+</li>
+<li>
+<p>第二步：make</p>
+</li>
+<li>
+<p>第三步：make install</p>
+</li>
+</ul>
+</li>
+<li>安装后的配置：
+<ul>
+<li>
+<p>(1) 导出二进制程序目录至PATH环境变量中；</p>
+<p>编辑文件<code>/etc/profile.d/NAME.sh</code></p>
+<pre><code>export PATH=/PATH/TO/BIN:$PATH
+</code></pre>
+</li>
+<li>
+<p>(2) 导出库文件路径</p>
+<p>编辑<code>/etc/ld.so.conf.d/NAME.conf</code></p>
+<p>添加新的库文件所在目录至此文件中；</p>
+<p>让系统重新生成缓存：</p>
+<pre><code>ldconfig [-v]
+</code></pre>
+</li>
+<li>
+<p>(3) 导出头文件</p>
+<p>基于链接的方式实现：</p>
+<pre><code>ln -sv 
+</code></pre>
+</li>
+<li>
+<p>(4) 导出帮助手册</p>
+<p>编辑/etc/man.config文件</p>
+<p>添加一个MANPATH</p>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#linux%E7%A8%8B%E5%BA%8F%E5%8C%85%E7%AE%A1%E7%90%86">Linux程序包管理</a>
+<ul>
+<li><a href="#centos%E7%B3%BB%E7%BB%9F%E4%B8%8Arpm%E5%91%BD%E4%BB%A4%E7%AE%A1%E7%90%86%E7%A8%8B%E5%BA%8F%E5%8C%85">CentOS系统上rpm命令管理程序包：</a></li>
+<li><a href="#linux%E7%A8%8B%E5%BA%8F%E5%8C%85%E7%AE%A1%E7%90%862">Linux程序包管理(2)</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/centos6-httpd-249-mysql-5533-php-5426-bian-yi-an-zhuang-guo-cheng/">
+              <h3 class="post-title">
+                centos6 httpd 2.4.9 + mysql-5.5.33 + php-5.4.26编译安装过程
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

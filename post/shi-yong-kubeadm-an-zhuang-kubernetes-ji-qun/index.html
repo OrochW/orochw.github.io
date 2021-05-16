@@ -1,0 +1,366 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>使用kubeadm安装kubernetes集群 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io//favicon.ico?v=1621149255031">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="使用kubeadm安装kubernetes集群 | Gridea - Atom Feed" href="https://orochw.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="K8s安装
+kubeadm
+1、master nodes：安装kubelet kubeadm docker
+2、master：kubelet init
+3、node：kubelet join
+一、准备工作
+关闭防火墙，iptables，关闭..." />
+    <meta name="keywords" content="容器相关" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io/">
+  <img class="avatar" src="https://orochw.github.io//images/avatar.png?v=1621149255031" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              使用kubeadm安装kubernetes集群
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-16
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/D8gypBMyT2/" class="post-tag">
+                  # 容器相关
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h1 id="k8s安装">K8s安装</h1>
+<p>kubeadm<br>
+1、master nodes：安装kubelet kubeadm docker<br>
+2、master：kubelet init<br>
+3、node：kubelet join</p>
+<h2 id="一-准备工作">一、准备工作</h2>
+<p>关闭防火墙，iptables，关闭swap分区</p>
+<pre><code>systemctl stop firewalld
+swapoff -a
+iptables -F
+
+yum install -y bridge-utils.x86_64
+modprobe  br_netfilter  # 加载br_netfilter模块，使用lsmod查看开启的模块
+cat &lt;&lt;EOF &gt;  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system  # 重新加载所有配置文件
+</code></pre>
+<h2 id="二-准备yum源">二、准备yum源</h2>
+<h3 id="1-准备docker的yum源">1、准备docker的yum源</h3>
+<pre><code>$ sudo yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+
+$ sudo yum install -y yum-utils
+
+$ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo                
+</code></pre>
+<h3 id="2-准备k8s的yum源">2、准备K8s的yum源</h3>
+<pre><code>cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+</code></pre>
+<h2 id="三-安装k8s-docker-1个master-2个node">三、安装k8s docker 1个master、2个node</h2>
+<p>master</p>
+<pre><code>yum install docker-ce kubelet kubeadm kubectl bash-completion -y
+
+</code></pre>
+<p>node节点</p>
+<pre><code>yum install docker-ce kubelet kubeadm -y
+</code></pre>
+<h2 id="四-主节点的初始化">四、主节点的初始化</h2>
+<h3 id="1-启动docker和kubelet">1、启动docker和kubelet</h3>
+<pre><code>vim /etc/sysconfig/kubelet
+
+# KUBELET_EXTRA_ARGS=&quot;--fail-swap-on=false&quot;
+
+# kubectl 命令补全
+source /usr/share/bash-completion/bash_completion
+source &lt;(kubectl completion bash)
+echo &quot;source &lt;(kubectl completion bash)&quot; &gt;&gt; ~/.bashrc
+
+systemctl start docker kubelet 
+systemctl enable docker kubelet
+kubeadm init --kubernetes-version=stable-1 --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12 --ignore-preflight-errors=Swap
+</code></pre>
+<p>master初始化完成</p>
+<pre><code>[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Creating the &quot;cluster-info&quot; ConfigMap in the &quot;kube-public&quot; namespace
+[kubelet-finalize] Updating &quot;/etc/kubernetes/kubelet.conf&quot; to point to a rotatable kubelet client certificate and key
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run &quot;kubectl apply -f [podnetwork].yaml&quot; with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.19.29:6443 --token rp14ge.sd6dlzilhzik7ga5 \
+    --discovery-token-ca-cert-hash sha256:d69202fa7177ceecc3fd2ef899ce18fa78530c91ec4a64fe910dc5674669ec31
+</code></pre>
+<h3 id="2-排错">2、排错</h3>
+<pre><code>[root@master ~]# kubectl get cs
+Warning: v1 ComponentStatus is deprecated in v1.19+
+NAME                 STATUS      MESSAGE                                                                                       ERROR
+scheduler            Unhealthy   Get &quot;http://127.0.0.1:10251/healthz&quot;: dial tcp 127.0.0.1:10251: connect: connection refused   
+controller-manager   Unhealthy   Get &quot;http://127.0.0.1:10252/healthz&quot;: dial tcp 127.0.0.1:10252: connect: connection refused   
+etcd-0               Healthy     {&quot;health&quot;:&quot;true&quot;}  
+</code></pre>
+<p>通过搜索应该是禁用端口</p>
+<pre><code>vim /etc/kubernetes/manifests/kube-scheduler.yaml
+#    - --port=0
+vim /etc/kubernetes/manifests/kube-controller-manager.yaml
+#    - --port=0
+</code></pre>
+<p>重启kubelet</p>
+<pre><code>[root@master manifests]# systemctl restart kubelet
+[root@master manifests]# kubectl get cs
+Warning: v1 ComponentStatus is deprecated in v1.19+
+NAME                 STATUS    MESSAGE             ERROR
+controller-manager   Healthy   ok                  
+scheduler            Healthy   ok                  
+etcd-0               Healthy   {&quot;health&quot;:&quot;true&quot;}
+</code></pre>
+<h3 id="3-安装网络组件">3、 安装网络组件</h3>
+<blockquote>
+<p><a href="https://github.com/coreos/flannel">flannel组件主页</a></p>
+</blockquote>
+<blockquote>
+<p>flannel For Kubernetes v1.17+</p>
+</blockquote>
+<pre><code>kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+</code></pre>
+<p>查看节点状态</p>
+<pre><code>[root@master manifests]# kubectl get nodes
+NAME     STATUS   ROLES                  AGE   VERSION
+master   Ready    control-plane,master   20m   v1.20.2
+</code></pre>
+<h2 id="五-node节点加入">五、node节点加入</h2>
+<h3 id="1-yum源准备">1、yum源准备</h3>
+<pre><code>[master]# scp /etc/yum.repos.d/docker-ce.repo node1:/etc/etc/yum.repos.d/docker-ce.repo
+[master]# scp /etc/yum.repos.d/kubernetes.repo node1:/etc/etc/yum.repos.d/kubernetes.repo
+</code></pre>
+<h3 id="2-安装docker和kubelet-kubeadm">2、安装docker和kubelet kubeadm</h3>
+<pre><code>yum install -y docker kubelet kubeadm
+</code></pre>
+<h3 id="3-启动并设置开机自启">3、启动并设置开机自启</h3>
+<pre><code>systemctl start docker kubelet
+systemctl enable docker kubelet
+</code></pre>
+<h3 id="4-加入节点">4、加入节点</h3>
+<pre><code>[root@234c12 ~]# kubeadm join 192.168.19.29:6443 --token rp14ge.sd6dlzilhzik7ga5 \
+    --discovery-token-ca-cert-hash sha256:d69202fa7177ceecc3fd2ef899ce18fa78530c91ec4a64fe910dc5674669ec31 --ignore-preflight-errors=Swap
+</code></pre>
+<p>查看集群状态</p>
+<pre><code>[root@master ~]# kubectl get nodes
+NAME     STATUS   ROLES                  AGE     VERSION
+master   Ready    control-plane,master   8m22s   v1.20.2
+node1    Ready    &lt;none&gt;                 3m51s   v1.20.2
+node2    Ready    &lt;none&gt;                 3m44s   v1.20.2
+
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#k8s%E5%AE%89%E8%A3%85">K8s安装</a>
+<ul>
+<li><a href="#%E4%B8%80-%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C">一、准备工作</a></li>
+<li><a href="#%E4%BA%8C-%E5%87%86%E5%A4%87yum%E6%BA%90">二、准备yum源</a>
+<ul>
+<li><a href="#1-%E5%87%86%E5%A4%87docker%E7%9A%84yum%E6%BA%90">1、准备docker的yum源</a></li>
+<li><a href="#2-%E5%87%86%E5%A4%87k8s%E7%9A%84yum%E6%BA%90">2、准备K8s的yum源</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89-%E5%AE%89%E8%A3%85k8s-docker-1%E4%B8%AAmaster-2%E4%B8%AAnode">三、安装k8s docker 1个master、2个node</a></li>
+<li><a href="#%E5%9B%9B-%E4%B8%BB%E8%8A%82%E7%82%B9%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96">四、主节点的初始化</a>
+<ul>
+<li><a href="#1-%E5%90%AF%E5%8A%A8docker%E5%92%8Ckubelet">1、启动docker和kubelet</a></li>
+<li><a href="#2-%E6%8E%92%E9%94%99">2、排错</a></li>
+<li><a href="#3-%E5%AE%89%E8%A3%85%E7%BD%91%E7%BB%9C%E7%BB%84%E4%BB%B6">3、 安装网络组件</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%94-node%E8%8A%82%E7%82%B9%E5%8A%A0%E5%85%A5">五、node节点加入</a>
+<ul>
+<li><a href="#1-yum%E6%BA%90%E5%87%86%E5%A4%87">1、yum源准备</a></li>
+<li><a href="#2-%E5%AE%89%E8%A3%85docker%E5%92%8Ckubelet-kubeadm">2、安装docker和kubelet kubeadm</a></li>
+<li><a href="#3-%E5%90%AF%E5%8A%A8%E5%B9%B6%E8%AE%BE%E7%BD%AE%E5%BC%80%E6%9C%BA%E8%87%AA%E5%90%AF">3、启动并设置开机自启</a></li>
+<li><a href="#4-%E5%8A%A0%E5%85%A5%E8%8A%82%E7%82%B9">4、加入节点</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/zheng-ze-biao-da-shi-ji-kuo-zhan-zheng-ze/">
+              <h3 class="post-title">
+                正则表达式及扩展正则
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

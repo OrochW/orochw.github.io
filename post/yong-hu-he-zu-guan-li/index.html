@@ -1,0 +1,493 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>用户和组管理 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io//favicon.ico?v=1621149255031">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="用户和组管理 | Gridea - Atom Feed" href="https://orochw.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="用户和组管理
+1. 资源分派：
+
+
+Authentication：认证
+
+
+Auhorization：授权
+
+
+Accouting：审计
+
+Audition
+
+
+
+token, identity(username/password)
+
+
+2..." />
+    <meta name="keywords" content="杂记-Linux" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io/">
+  <img class="avatar" src="https://orochw.github.io//images/avatar.png?v=1621149255031" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              用户和组管理
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-16
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/EKIlBm3oCT/" class="post-tag">
+                  # 杂记-Linux
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="用户和组管理">用户和组管理</h2>
+<h3 id="1-资源分派">1. 资源分派：</h3>
+<ul>
+<li>
+<p>Authentication：认证</p>
+</li>
+<li>
+<p>Auhorization：授权</p>
+</li>
+<li>
+<p>Accouting：审计</p>
+<blockquote>
+<p>Audition</p>
+</blockquote>
+</li>
+<li>
+<p>token, identity(username/password)</p>
+</li>
+</ul>
+<h3 id="2-linux用户usernameuid">2. Linux用户：Username/UID</h3>
+<ul>
+<li>
+<p>管理员：root, 0</p>
+</li>
+<li>
+<p>普通用户：1-65535</p>
+</li>
+<li>
+<p>系统用户：1-499, 1-999</p>
+</li>
+<li>
+<p>对守护进程获取资源进行权限分配</p>
+<ul>
+<li>登录用户:500+, 1000+</li>
+</ul>
+</li>
+<li>
+<p>交互式登录</p>
+</li>
+</ul>
+<h3 id="3-linux组groupnamegid">3.     Linux组：Groupname/GID</h3>
+<ul>
+<li>管理员组：root, 0</li>
+<li>普通组：
+<ul>
+<li>系统组：1-499, 1-999</li>
+<li>普通组：500+, 1000+</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-linux安全上下文">4. Linux安全上下文：</h3>
+<ul>
+<li>运行中的程序：进程 (process)
+<ul>
+<li>以进程发起者的身份运行：
+<ul>
+<li>root: cat</li>
+<li>tom: cat</li>
+</ul>
+<blockquote>
+<p>进程所能够访问的所有资源的权限取决于进程的发起者的身份；</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-linux组的类别">5. Linux组的类别：</h3>
+<ul>
+<li>用户的基本组(主组)：</li>
+<li>组名同用户名，且仅包含一个用户：私有组</li>
+<li>用户的附加组(额外组)：</li>
+</ul>
+<h3 id="6linux用户和组相关的配置文件">6.Linux用户和组相关的配置文件：</h3>
+<blockquote>
+<p>/etc/passwd：#用户及其属性信息(名称、UID、基本组ID等等)；</p>
+</blockquote>
+<blockquote>
+<p>/etc/group：组及其属性信息；</p>
+</blockquote>
+<blockquote>
+<p>/etc/shadow：用户密码及其相关属性；</p>
+</blockquote>
+<blockquote>
+<p>/etc/gshadow：组密码及其相关属性；</p>
+</blockquote>
+<ul>
+<li>/etc/passwd：
+<blockquote>
+<p>name:password:UID:GID:GECOS:directory:shell</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p>用户名:密码<br>
+UID:GID:GECOS:主目录:默认shell</p>
+</blockquote>
+<ul>
+<li>
+<p>/etc/group：</p>
+<ul>
+<li>group_name:password:GID:user_list</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>组名:组密码:GID:以当前组为附加组的用户列表(分隔符为逗号)</p>
+</blockquote>
+<ul>
+<li>/etc/shadow</li>
+</ul>
+<blockquote>
+<p>用户名:加密了的密码:最近一次更改密码的日期:密码的最小使用期限:最大密码使用期限:密码警告时间段:密码禁用期:账户过期日期:保留字段</p>
+</blockquote>
+<ul>
+<li>
+<p>加密机制：</p>
+<ul>
+<li>
+<p>加密：明文--&gt; 密文</p>
+</li>
+<li>
+<p>解密：密文--&gt; 明文</p>
+</li>
+<li>
+<p>单向加密：提取数据指纹</p>
+<ul>
+<li>md5: message digest, 128bits</li>
+<li>sha1: secure hash algorithm, 160bits</li>
+<li>sha224: 224bits</li>
+<li>sha256: 256bits</li>
+<li>sha384: 384bits</li>
+<li>sha512: 512bits</li>
+</ul>
+<blockquote>
+<p>雪崩效应：初始的条件的微小改变，将会引起结果的巨大改变；</p>
+</blockquote>
+<blockquote>
+<p>定长输出：</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p>密码的复杂性策略：</p>
+<ul>
+<li>使用数字、大写字母、小写字母及特殊字符中至少3种；</li>
+<li>足够长；</li>
+<li>使用随机密码；</li>
+<li>定期更换；不要使用最近曾经使用过的密码；</li>
+</ul>
+</li>
+</ul>
+<h3 id="7用户和组相关的管理命令">7.用户和组相关的管理命令：</h3>
+<h4 id="用户创建useradd">用户创建：useradd</h4>
+<pre><code>useradd [options] LOGIN
+	-u UID: [UID_MIN, UID_MAX], 定义在/etc/login.defs
+	-g GID：指明用户所属基本组，可为组名，也可以GID；
+	-c &quot;COMMENT&quot;：用户的注释信息；
+	-d /PATH/TO/HOME_DIR: 以指定的路径为家目录；
+	-s SHELL: 指明用户的默认shell程序，可用列表在/etc/shells文件中；
+	-G GROUP1[,GROUP2,...[,GROUPN]]]：为用户指明附加组；组必须事先存在；
+	-r: 创建系统用户
+</code></pre>
+<blockquote>
+<p>CentOS 6: ID&lt;500</p>
+</blockquote>
+<blockquote>
+<p>CentOS 7: ID&lt;1000</p>
+</blockquote>
+<pre><code>默认值设定：/etc/default/useradd文件中
+	useradd -D 
+		-s SHELL
+</code></pre>
+<h4 id="组创建groupadd">组创建：groupadd</h4>
+<pre><code>groupadd [OPTION]... group_name
+
+	-g GID: 指明GID号；[GID_MIN, GID_MAX]
+	-r: 创建系统组；
+		CentOS 6: ID&lt;500
+		CentOS 7: ID&lt;1000
+</code></pre>
+<h4 id="查看用户相关的id信息id">查看用户相关的ID信息：id</h4>
+<pre><code>id [OPTION]... [USER]
+	-u: UID
+	-g: GID
+	-G: Groups
+	-n: Name
+</code></pre>
+<h4 id="切换用户或以其他用户身份执行命令su">切换用户或以其他用户身份执行命令：su</h4>
+<pre><code>su [options...] [-] [user [args...]]
+
+	切换用户的方式：
+		su UserName：非登录式切换，即不会读取目标用户的配置文件；
+		su - UserName：登录式切换，会读取目标用户的配置文件；完全切换；
+
+		Note：root su至其他用户无须密码；非root用户切换时需要密码；
+
+	换个身份执行命令：
+		su [-] UserName -c 'COMMAND'
+
+	选项：
+		-l：“su -l UserName”相当于“su - UserName”
+</code></pre>
+<h3 id="8用户属性修改usermod">8.用户属性修改：usermod</h3>
+<pre><code>usermod [OPTION] login
+
+	-u UID: 新UID
+	-g GID: 新基本组
+	-G GROUP1[,GROUP2,...[,GROUPN]]]：新附加组，原来的附加组将会被覆盖；若保留原有，则要同时使用-a选项，表示append；
+	-s SHELL：新的默认SHELL；
+	-c 'COMMENT'：新的注释信息；
+	-d HOME: 新的家目录；原有家目录中的文件不会同时移动至新的家目录；若要移动，则同时使用-m选项；
+	-l login_name: 新的名字；
+
+	-L: lock指定用户
+	-U: unlock指定用户
+
+	-e YYYY-MM-DD: 指明用户账号过期日期；
+	-f INACTIVE: 设定非活动期限；
+</code></pre>
+<h3 id="给用户添加密码passwd">给用户添加密码：passwd</h3>
+<pre><code>passwd [OPTIONS] UserName: 修改指定用户的密码，仅root用户权限
+passwd: 修改自己的密码；
+
+常用选项：
+	-l: 锁定指定用户
+	-u: 解锁指定用户
+	-n mindays: 指定最短使用期限
+	-x maxdays：最大使用期限
+	-w warndays：提前多少天开始警告
+	-i inactivedays：非活动期限；
+
+	--stdin：从标准输入接收用户密码；
+		echo &quot;PASSWORD&quot; | passwd --stdin USERNAME
+
+		Note: /dev/null, bit buckets
+		      /dev/zero, 
+</code></pre>
+<h3 id="删除用户userdel">删除用户：userdel</h3>
+<pre><code>userdel [OPTION]... login
+	-r: 删除用户家目录；
+</code></pre>
+<h3 id="组属性修改groupmod">组属性修改：groupmod</h3>
+<pre><code>groupmod [OPTION]... group
+	-n group_name: 新名字
+	-g GID: 新的GID；
+</code></pre>
+<h3 id="组删除groupdel">组删除：groupdel</h3>
+<pre><code>groupdel GROUP
+</code></pre>
+<h3 id="组密码gpasswd">组密码：gpasswd</h3>
+<pre><code>gpasswd [OPTION] GROUP
+	-a user: 将user添加至指定组中；
+	-d user: 删除用户user的以当前组为组名的附加组
+	-A user1,user2,...: 设置有管理权限的用户列表
+	newgrp命令：临时切换基本组；
+</code></pre>
+<blockquote>
+<p>如果用户本不属于此组，则需要组密码；</p>
+</blockquote>
+<h3 id="修改用户属性chage">修改用户属性：chage</h3>
+<pre><code>chage [OPTION]... LOGIN
+	-d LAST_DAY
+	-E, --expiredate EXPIRE_DATE
+	-I, --inactive INACTIVE
+	-m, --mindays MIN_DAYS
+	-M, --maxdays MAX_DAYS
+	-W, --warndays WARN_DAYS
+</code></pre>
+<blockquote>
+<p>其它命令：chfn, chsh, finger</p>
+</blockquote>
+<blockquote>
+<p>命令总结：useradd, groupadd, su, id, usermod, userdel, groupmod, groupdel, passwd, newgrp, pwck, gpasswd, chage, chsh, chfn, finger</p>
+</blockquote>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%94%A8%E6%88%B7%E5%92%8C%E7%BB%84%E7%AE%A1%E7%90%86">用户和组管理</a>
+<ul>
+<li><a href="#1-%E8%B5%84%E6%BA%90%E5%88%86%E6%B4%BE">1. 资源分派：</a></li>
+<li><a href="#2-linux%E7%94%A8%E6%88%B7usernameuid">2. Linux用户：Username/UID</a></li>
+<li><a href="#3-linux%E7%BB%84groupnamegid">3.     Linux组：Groupname/GID</a></li>
+<li><a href="#4-linux%E5%AE%89%E5%85%A8%E4%B8%8A%E4%B8%8B%E6%96%87">4. Linux安全上下文：</a></li>
+<li><a href="#5-linux%E7%BB%84%E7%9A%84%E7%B1%BB%E5%88%AB">5. Linux组的类别：</a></li>
+<li><a href="#6linux%E7%94%A8%E6%88%B7%E5%92%8C%E7%BB%84%E7%9B%B8%E5%85%B3%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">6.Linux用户和组相关的配置文件：</a></li>
+<li><a href="#7%E7%94%A8%E6%88%B7%E5%92%8C%E7%BB%84%E7%9B%B8%E5%85%B3%E7%9A%84%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4">7.用户和组相关的管理命令：</a>
+<ul>
+<li><a href="#%E7%94%A8%E6%88%B7%E5%88%9B%E5%BB%BAuseradd">用户创建：useradd</a></li>
+<li><a href="#%E7%BB%84%E5%88%9B%E5%BB%BAgroupadd">组创建：groupadd</a></li>
+<li><a href="#%E6%9F%A5%E7%9C%8B%E7%94%A8%E6%88%B7%E7%9B%B8%E5%85%B3%E7%9A%84id%E4%BF%A1%E6%81%AFid">查看用户相关的ID信息：id</a></li>
+<li><a href="#%E5%88%87%E6%8D%A2%E7%94%A8%E6%88%B7%E6%88%96%E4%BB%A5%E5%85%B6%E4%BB%96%E7%94%A8%E6%88%B7%E8%BA%AB%E4%BB%BD%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4su">切换用户或以其他用户身份执行命令：su</a></li>
+</ul>
+</li>
+<li><a href="#8%E7%94%A8%E6%88%B7%E5%B1%9E%E6%80%A7%E4%BF%AE%E6%94%B9usermod">8.用户属性修改：usermod</a></li>
+<li><a href="#%E7%BB%99%E7%94%A8%E6%88%B7%E6%B7%BB%E5%8A%A0%E5%AF%86%E7%A0%81passwd">给用户添加密码：passwd</a></li>
+<li><a href="#%E5%88%A0%E9%99%A4%E7%94%A8%E6%88%B7userdel">删除用户：userdel</a></li>
+<li><a href="#%E7%BB%84%E5%B1%9E%E6%80%A7%E4%BF%AE%E6%94%B9groupmod">组属性修改：groupmod</a></li>
+<li><a href="#%E7%BB%84%E5%88%A0%E9%99%A4groupdel">组删除：groupdel</a></li>
+<li><a href="#%E7%BB%84%E5%AF%86%E7%A0%81gpasswd">组密码：gpasswd</a></li>
+<li><a href="#%E4%BF%AE%E6%94%B9%E7%94%A8%E6%88%B7%E5%B1%9E%E6%80%A7chage">修改用户属性：chage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/linux-cheng-xu-bao-guan-li/">
+              <h3 class="post-title">
+                Linux程序包管理
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
