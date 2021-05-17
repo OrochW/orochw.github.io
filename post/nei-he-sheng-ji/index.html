@@ -1,0 +1,321 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>内核升级 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1621224611219">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="内核升级 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="操作步骤：
+小版本升级
+1. 查看当前和可升级版本
+[root@server-1 ~]# yum list kernel
+Installed Packages
+kernel.x86_64                           ..." />
+    <meta name="keywords" content="容器相关" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1621224611219" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              内核升级
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-17
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/D8gypBMyT2/" class="post-tag">
+                  # 容器相关
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h1 id="操作步骤">操作步骤：</h1>
+<h2 id="小版本升级">小版本升级</h2>
+<h3 id="1-查看当前和可升级版本">1. 查看当前和可升级版本</h3>
+<pre><code>[root@server-1 ~]# yum list kernel
+Installed Packages
+kernel.x86_64                           3.10.0-957.el7                                      @anaconda
+Available Packages
+kernel.x86_64                           3.10.0-957.5.1.el7                                  updates  
+</code></pre>
+<h3 id="2-升级">2. 升级</h3>
+<pre><code> [root@server-1 ~]# yum update kernel -y 
+</code></pre>
+<h3 id="3-重启并检查">3. 重启并检查</h3>
+<pre><code> [root@server-1 ~]# reboot 　　
+
+ [root@server-1 ~]# uname -r 
+</code></pre>
+<p>##大版本升级</p>
+<h3 id="1-载入公钥">1. 载入公钥</h3>
+<pre><code>[root@server-1 ~]# rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+</code></pre>
+<h3 id="2-升级安装elrepo">2. 升级安装ELRepo</h3>
+<pre><code>[root@server-1 ~]# rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
+</code></pre>
+<h3 id="3-载入elrepo-kernel元数据">3. 载入elrepo-kernel元数据</h3>
+<pre><code>[root@server-1 ~]# yum --disablerepo=\* --enablerepo=elrepo-kernel repolist
+</code></pre>
+<h3 id="4-查看可用的rpm包">4. 查看可用的rpm包</h3>
+<pre><code>[root@server-1 ~]# yum --disablerepo=\* --enablerepo=elrepo-kernel list kernel*
+Installed Packages
+kernel.x86_64                           3.10.0-957.el7                           @anaconda    
+kernel.x86_64                           3.10.0-957.5.1.el7                       @updates     
+kernel-tools.x86_64                     3.10.0-957.el7                           @anaconda    
+kernel-tools-libs.x86_64                3.10.0-957.el7                           @anaconda    
+Available Packages
+kernel-lt.x86_64                        4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-lt-devel.x86_64                  4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-lt-doc.noarch                    4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-lt-headers.x86_64                4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-lt-tools.x86_64                  4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-lt-tools-libs.x86_64             4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-lt-tools-libs-devel.x86_64       4.4.176-1.el7.elrepo                     elrepo-kernel
+kernel-ml.x86_64                        4.20.12-1.el7.elrepo                     elrepo-kernel　// 安装目标版本
+kernel-ml-devel.x86_64                  4.20.12-1.el7.elrepo                     elrepo-kernel
+kernel-ml-doc.noarch                    4.20.12-1.el7.elrepo                     elrepo-kernel
+kernel-ml-headers.x86_64                4.20.12-1.el7.elrepo                     elrepo-kernel
+kernel-ml-tools.x86_64                  4.20.12-1.el7.elrepo                     elrepo-kernel
+kernel-ml-tools-libs.x86_64             4.20.12-1.el7.elrepo                     elrepo-kernel
+kernel-ml-tools-libs-devel.x86_64       4.20.12-1.el7.elrepo                     elrepo-kernel
+</code></pre>
+<p>| 说明：</p>
+<p>lt  ：long term support，长期支持版本；</p>
+<p>ml：mainline，主线版本；</p>
+<h3 id="5-安装最新版本的kernel">5. 安装最新版本的kernel</h3>
+<pre><code>[root@server-1 ~]# yum --disablerepo=\* --enablerepo=elrepo-kernel install  kernel-ml.x86_64  -y
+</code></pre>
+<h3 id="6-删除旧版本工具包">6. 删除旧版本工具包</h3>
+<pre><code>[root@server-1 ~]# yum remove kernel-tools-libs.x86_64 kernel-tools.x86_64  -y
+</code></pre>
+<h3 id="7-安装新版本工具包">7. 安装新版本工具包</h3>
+<pre><code>[root@server-1 ~]# yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-ml-tools.x86_64  -y
+</code></pre>
+<h3 id="8-查看内核插入顺序">8. 查看内核插入顺序</h3>
+<pre><code>[root@server-1 ~]# awk -F \' '$1==&quot;menuentry &quot; {print i++ &quot; : &quot; $2}' /etc/grub2.cfg
+0 : CentOS Linux (4.20.12-1.el7.elrepo.x86_64) 7 (Core)
+1 : CentOS Linux (3.10.0-957.5.1.el7.x86_64) 7 (Core)
+2 : CentOS Linux (3.10.0-957.el7.x86_64) 7 (Core)
+3 : CentOS Linux (0-rescue-ca0f6fb3c5f24478abc0a2e275281d7a) 7 (Core)
+</code></pre>
+<p>说明：默认新内核是从头插入，默认启动顺序也是从0开始（当前顺序还未生效），或者使用：</p>
+<pre><code>[root@server-17 ~]# grep &quot;^menuentry&quot; /boot/grub2/grub.cfg | cut -d &quot;'&quot; -f2
+CentOS Linux (4.20.12-1.el7.elrepo.x86_64) 7 (Core)
+CentOS Linux (3.10.0-957.5.1.el7.x86_64) 7 (Core)
+CentOS Linux (3.10.0-957.el7.x86_64) 7 (Core)
+CentOS Linux (0-rescue-ca0f6fb3c5f24478abc0a2e275281d7a) 7 (Core)
+</code></pre>
+<p>其中文件 /etc/grub2.cfg 和 /boot/grub2/grub.cfg 内容一致。</p>
+<h3 id="9-查看当前实际启动顺序">9. 查看当前实际启动顺序</h3>
+<pre><code>[root@server-1 ~]# grub2-editenv list
+saved_entry=CentOS Linux (3.10.0-957.5.1.el7.x86_64) 7 (Core)
+</code></pre>
+<h3 id="10-设置默认启动">10. 设置默认启动</h3>
+<pre><code>[root@server-1 ~]# grub2-set-default 'CentOS Linux (4.20.12-1.el7.elrepo.x86_64) 7 (Core)'
+[root@server-1 ~]# grub2-editenv list
+saved_entry=CentOS Linux (4.20.12-1.el7.elrepo.x86_64) 7 (Core)
+</code></pre>
+<p>或者</p>
+<pre><code>[root@server-1 ~]# vim /etc/default/grub
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR=&quot;$(sed 's, release .*$,,g' /etc/system-release)&quot;
+GRUB_DEFAULT=0
+GRUB_DISABLE_SUBMENU=true
+GRUB_TERMINAL_OUTPUT=&quot;console&quot;
+GRUB_CMDLINE_LINUX=&quot;crashkernel=auto rd.lvm.lv=centos_master/root rd.lvm.lv=centos_master/swap rhgb quiet&quot;
+GRUB_DISABLE_RECOVERY=&quot;true&quot;
+</code></pre>
+<h3 id="11-接下来运行下面的命令来重新创建内核配置">11. 接下来运行下面的命令来重新创建内核配置。</h3>
+<pre><code>[root@node01 ~]# grub2-mkconfig -o /boot/grub2/grub.cfg
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-5.12.0-1.el7.elrepo.x86_64
+Found initrd image: /boot/initramfs-5.12.0-1.el7.elrepo.x86_64.img
+Found linux image: /boot/vmlinuz-3.10.0-1160.el7.x86_64
+Found initrd image: /boot/initramfs-3.10.0-1160.el7.x86_64.img
+Found linux image: /boot/vmlinuz-0-rescue-7764c99a180d40029f34fa33f565be8e
+Found initrd image: /boot/initramfs-0-rescue-7764c99a180d40029f34fa33f565be8e.img
+done
+</code></pre>
+<h3 id="12-重启并检查">12.  重启并检查</h3>
+<pre><code> [root@server-1 ~]# reboot 
+
+ [root@server-1 ~]# uname -r 
+</code></pre>
+<h3 id="13-一键最新脚本">13. 一键最新脚本</h3>
+<pre><code>rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
+yum --disablerepo=\* --enablerepo=elrepo-kernel repolist
+yum --disablerepo=\* --enablerepo=elrepo-kernel install  kernel-ml.x86_64  -y
+yum remove kernel-tools-libs.x86_64 kernel-tools.x86_64  -y
+yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-ml-tools.x86_64  -y
+sed -i s/GRUB_DEFAULT=saved/GRUB_DEFAULT=0/g /etc/default/grub
+grub2-mkconfig -o /boot/grub2/grub.cfg
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4">操作步骤：</a>
+<ul>
+<li><a href="#%E5%B0%8F%E7%89%88%E6%9C%AC%E5%8D%87%E7%BA%A7">小版本升级</a>
+<ul>
+<li><a href="#1-%E6%9F%A5%E7%9C%8B%E5%BD%93%E5%89%8D%E5%92%8C%E5%8F%AF%E5%8D%87%E7%BA%A7%E7%89%88%E6%9C%AC">1. 查看当前和可升级版本</a></li>
+<li><a href="#2-%E5%8D%87%E7%BA%A7">2. 升级</a></li>
+<li><a href="#3-%E9%87%8D%E5%90%AF%E5%B9%B6%E6%A3%80%E6%9F%A5">3. 重启并检查</a></li>
+<li><a href="#1-%E8%BD%BD%E5%85%A5%E5%85%AC%E9%92%A5">1. 载入公钥</a></li>
+<li><a href="#2-%E5%8D%87%E7%BA%A7%E5%AE%89%E8%A3%85elrepo">2. 升级安装ELRepo</a></li>
+<li><a href="#3-%E8%BD%BD%E5%85%A5elrepo-kernel%E5%85%83%E6%95%B0%E6%8D%AE">3. 载入elrepo-kernel元数据</a></li>
+<li><a href="#4-%E6%9F%A5%E7%9C%8B%E5%8F%AF%E7%94%A8%E7%9A%84rpm%E5%8C%85">4. 查看可用的rpm包</a></li>
+<li><a href="#5-%E5%AE%89%E8%A3%85%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC%E7%9A%84kernel">5. 安装最新版本的kernel</a></li>
+<li><a href="#6-%E5%88%A0%E9%99%A4%E6%97%A7%E7%89%88%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%8C%85">6. 删除旧版本工具包</a></li>
+<li><a href="#7-%E5%AE%89%E8%A3%85%E6%96%B0%E7%89%88%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%8C%85">7. 安装新版本工具包</a></li>
+<li><a href="#8-%E6%9F%A5%E7%9C%8B%E5%86%85%E6%A0%B8%E6%8F%92%E5%85%A5%E9%A1%BA%E5%BA%8F">8. 查看内核插入顺序</a></li>
+<li><a href="#9-%E6%9F%A5%E7%9C%8B%E5%BD%93%E5%89%8D%E5%AE%9E%E9%99%85%E5%90%AF%E5%8A%A8%E9%A1%BA%E5%BA%8F">9. 查看当前实际启动顺序</a></li>
+<li><a href="#10-%E8%AE%BE%E7%BD%AE%E9%BB%98%E8%AE%A4%E5%90%AF%E5%8A%A8">10. 设置默认启动</a></li>
+<li><a href="#11-%E6%8E%A5%E4%B8%8B%E6%9D%A5%E8%BF%90%E8%A1%8C%E4%B8%8B%E9%9D%A2%E7%9A%84%E5%91%BD%E4%BB%A4%E6%9D%A5%E9%87%8D%E6%96%B0%E5%88%9B%E5%BB%BA%E5%86%85%E6%A0%B8%E9%85%8D%E7%BD%AE">11. 接下来运行下面的命令来重新创建内核配置。</a></li>
+<li><a href="#12-%E9%87%8D%E5%90%AF%E5%B9%B6%E6%A3%80%E6%9F%A5">12.  重启并检查</a></li>
+<li><a href="#13-%E4%B8%80%E9%94%AE%E6%9C%80%E6%96%B0%E8%84%9A%E6%9C%AC">13. 一键最新脚本</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/redis-yi-jian-an-zhuang-jiao-ben/">
+              <h3 class="post-title">
+                redis一键安装脚本
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
