@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://orochw.github.io</id>
     <title>Gridea</title>
-    <updated>2021-05-17T07:11:08.171Z</updated>
+    <updated>2021-05-17T07:36:36.619Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://orochw.github.io"/>
     <link rel="self" href="https://orochw.github.io/atom.xml"/>
@@ -10,6 +10,55 @@
     <logo>https://orochw.github.io/images/avatar.png</logo>
     <icon>https://orochw.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[nginx一键编译脚本]]></title>
+        <id>https://orochw.github.io/post/nginx-yi-jian-bian-yi-jiao-ben/</id>
+        <link href="https://orochw.github.io/post/nginx-yi-jian-bian-yi-jiao-ben/">
+        </link>
+        <updated>2021-05-17T07:24:50.000Z</updated>
+        <content type="html"><![CDATA[<pre><code>############  安装nginx
+yum install -y  pcre pcre-devel zlib zlib-devel openssl openssl-devel autoconf automake make
+useradd -s /sbin/nologin nginx
+cd /usr/local/src
+wget http://nginx.org/download/nginx-1.16.0.tar.gz
+tar -xf nginx-1.16.0.tar.gz
+cd nginx-1.16.0
+./configure --prefix=/usr/local/nginx --user=nginx --group=nginx --with-http_realip_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_ssl_module  --with-http_flv_module --with-stream --with-threads --with-stream_realip_module --with-stream_ssl_module --with-file-aio
+make &amp;&amp; make install
+
+
+
+
+------- 配置环境变量 ----------
+cat &lt;&lt;'EOF' &gt; /etc/profile.d/nginx.sh
+export NGINX_HOME=/usr/local/nginx
+export PATH=$NGINX_HOME/sbin:$PATH
+EOF
+source /etc/profile
+
+-------- 配置成系统服务 ------------
+cat &lt;&lt;EOF &gt; /usr/lib/systemd/system/nginx.service
+[Unit]
+Description=nginx - high performance web server
+Documentation=http://nginx.org/en/docs/
+After=network.target remote-fs.target nss-lookup.target
+
+
+[Service]
+Type=forking
+ExecStartPre=/usr/local/nginx/sbin/nginx -t -c /usr/local/nginx/conf/nginx.conf
+ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
+ExecReload=/usr/local/nginx/sbin/nginx -s reload
+ExecStop=/usr/local//nginx/sbin/nginx -s quit
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[PPTP一键脚本]]></title>
         <id>https://orochw.github.io/post/pptp-yi-jian-jiao-ben/</id>
@@ -1848,486 +1897,6 @@ DIR: 777-umask
 <blockquote>
 <p>命令总结：chmod, chown, chgrp, umask</p>
 </blockquote>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[磁盘管理、文件系统管理]]></title>
-        <id>https://orochw.github.io/post/ci-pan-guan-li-wen-jian-xi-tong-guan-li/</id>
-        <link href="https://orochw.github.io/post/ci-pan-guan-li-wen-jian-xi-tong-guan-li/">
-        </link>
-        <updated>2021-05-16T05:37:39.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="linux磁盘管理">Linux磁盘管理</h2>
-<ul>
-<li>I/O Ports: I/O设备地址；
-<ul>
-<li>一切皆文件：
-<ul>
-<li>open(), read(), write(), close()</li>
-<li>块设备：block，存取单位“块”，磁盘</li>
-<li>字符设备：char，存取单位“字符”，键盘</li>
-<li>设备文件：关联至一个设备驱动程序，进而能够跟与之对应硬件设备进行通信；
-<ul>
-<li>设备号码：
-<ul>
-<li>主设备号：major number, 标识设备类型</li>
-<li>次设备号：minor number, 标识同一类型下的不同设备</li>
-</ul>
-</li>
-<li>硬盘接口类型：
-<ul>
-<li>并行：<br>
-IDE：133MB/s<br>
-SCSI：640MB/s</li>
-<li>串口：<br>
-SATA：6Gbps<br>
-SAS：6Gbps<br>
-USB：480MB/s<br>
-rpm: rotations per minute</li>
-</ul>
-</li>
-<li>/dev/DEV_FILE
-<blockquote>
-<p>磁盘设备的设备文件命名：</p>
-</blockquote>
-<ul>
-<li>IDE: /dev/hd<br>
-SCSI, SATA, SAS, USB: /dev/sd
-<ul>
-<li>不同设备：a-z<br>
-<code>/dev/sda, /dev/sdb, ...</code></li>
-<li>同一设备上的不同分区：1,2, ...<br>
-<code>/dev/sda1, /dev/sda5</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>机械式硬盘：
-<ul>
-<li>track：磁道</li>
-<li>cylinder: 柱面</li>
-<li>secotr: 扇区<br>
-** 512bytes **</li>
-<li>如何分区：<br>
-** 按柱面 **</li>
-<li>0磁道0扇区：512bytes</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<pre><code>          MBR: Master Boot Record
-           446bytes: boot loader
-	          64bytes：分区表
-	          16bytes: 标识一个分区
-            2bytes: 55AA
-</code></pre>
-<blockquote>
-<blockquote>
-<p>tips<br>
-<strong>4</strong>个主分区；<br>
-3<strong>主分区</strong>+1<strong>扩展</strong>(N个逻辑分区)<br>
-逻辑分区</p>
-</blockquote>
-</blockquote>
-<blockquote>
-<p>问题：UEFI, GPT？</p>
-</blockquote>
-<h3 id="分区管理工具fdisk-parted-sfdisk">分区管理工具：fdisk, parted, sfdisk</h3>
-<blockquote>
-<p>fdisk：对于一块硬盘来讲，最多只能管理15分区；</p>
-</blockquote>
-<ul>
-<li>语法：<br>
-<code>fdisk -l [-u] [device...]</code></li>
-</ul>
-<pre><code>用法
-# fdisk device(/dev/sd{a,b,c})
-	子命令：管理功能
-	p: print, 显示已有分区；
-	n: new, 创建
-	d: delete, 删除
-	w: write, 写入磁盘并退出
-	q: quit, 放弃更新并退出
-	m: 获取帮助
-	l: 列表所分区id
-	t: 调整分区id
-</code></pre>
-<ul>
-<li>查看内核是否已经识别新的分区：</li>
-</ul>
-<p><code># cat /proc/partations</code></p>
-<ul>
-<li>通知内核重新读取硬盘分区表：</li>
-</ul>
-<pre><code>partx -a /dev/DEVICE
-	-n M:N
-
-	kpartx -a /dev/DEVICE
-		-f: force
-</code></pre>
-<blockquote>
-<p>tips:<br>
-CentOS <strong>5</strong>: 使用partprobe</p>
-</blockquote>
-<p><code>partprobe [/dev/DEVICE]</code></p>
-<h3 id="linux文件系统管理">Linux文件系统管理：</h3>
-<ul>
-<li>Linux文件系统:
-<ul>
-<li>ext2</li>
-<li>ext3</li>
-<li>ext4</li>
-<li>xfs</li>
-<li>btrfs</li>
-<li>reiserfs</li>
-<li>jfs</li>
-<li>swap
-<ul>
-<li>swap: 交换分区</li>
-</ul>
-</li>
-<li>光盘：iso9660</li>
-</ul>
-</li>
-<li>Windows：
-<ul>
-<li>fat32</li>
-<li>ntfs</li>
-</ul>
-</li>
-<li>Unix:
-<ul>
-<li>FFS</li>
-<li>UFS</li>
-<li>JFS2</li>
-</ul>
-</li>
-<li>网络文件系统：
-<ul>
-<li>NFS</li>
-<li>CIFS</li>
-</ul>
-</li>
-<li>集群文件系统：
-<ul>
-<li>GFS2</li>
-<li>OCFS2</li>
-</ul>
-</li>
-<li>分布式文件系统：
-<ul>
-<li>ceph</li>
-<li>moosefs</li>
-<li>mogilefs</li>
-<li>GlusterFS</li>
-<li>Lustre</li>
-</ul>
-</li>
-<li>根据其是否支持&quot;journal&quot;功能：
-<ul>
-<li>日志型文件系统: ext3, ext4, xfs, ...</li>
-<li>非日志型文件系统: ext2, vfat</li>
-</ul>
-</li>
-<li>文件系统的组成部分：
-<ul>
-<li>内核中的模块：ext4, xfs, vfat</li>
-<li>用户空间的管理工具：mkfs.ext4, mkfs.xfs, mkfs.vfat</li>
-</ul>
-</li>
-<li>Linux的虚拟文件系统：VFS</li>
-</ul>
-<h3 id="创建文件系统mkfs命令">创建文件系统：mkfs命令</h3>
-<h4 id="创建文件系统类型">创建文件系统类型：</h4>
-<p><code># mkfs.FS_TYPE /dev/DEVICE</code></p>
-<blockquote>
-<p>ext4</p>
-</blockquote>
-<blockquote>
-<p>xfs</p>
-</blockquote>
-<blockquote>
-<p>btrfs</p>
-</blockquote>
-<blockquote>
-<p>vfat</p>
-</blockquote>
-<h4 id="在哪一个设备设备上创建文件系统">在哪一个设备设备上创建文件系统：</h4>
-<p><code># mkfs -t FS_TYPE /dev/DEVICE</code></p>
-<pre><code>用法：
--L 'LABEL': 设定卷标
-mke2fs：ext系列文件系统专用管理工具
-	-t {ext2|ext3|ext4}
-	-b {1024|2048|4096}
-	-L 'LABEL'
-	-j: 相当于 -t ext3
-	mkfs.ext3 = mkfs -t ext3 = mke2fs -j = mke2fs -t ext3
-	-i #: 为数据空间中每多少个字节创建一个inode；此大小不应该小于block的大小；
-	-N #：为数据空间创建个多少个inode；
-	-m #: 为管理人员预留的空间占据的百分比；
-	-O FEATURE[,...]：启用指定特性
-	-O ^FEATURE：关闭指定特性
-</code></pre>
-<h4 id="创建交换分区-mkswap">创建交换分区 mkswap</h4>
-<pre><code>mkswap [options] device
-	-L 'LABEL'
-	前提：调整其分区的ID为82；
-</code></pre>
-<h3 id="其它常用工具">其它常用工具：</h3>
-<ul>
-<li>blkid：块设备属性信息查看</li>
-</ul>
-<pre><code>blkid [OPTION]... [DEVICE]
-	+ -U UUID: 根据指定的UUID来查找对应的设备
-	+ -L LABEL：根据指定的LABEL来查找对应的设备
-</code></pre>
-<ul>
-<li>
-<p>e2label：管理ext系列文件系统的LABEL<br>
-<code>e2label DEVICE [LABEL]</code></p>
-</li>
-<li>
-<p>tune2fs：重新设定ext系列文件系统可调整参数的值</p>
-</li>
-</ul>
-<pre><code>	-l：查看指定文件系统超级块信息；super block
-	-L 'LABEL'：修改卷标
-	-m #：修预留给管理员的空间百分比
-	-j: 将ext2升级为ext3
-	-O: 文件系统属性启用或禁用
-	-o: 调整文件系统的默认挂载选项
-	-U UUID: 修改UUID号；
-</code></pre>
-<ul>
-<li>mpe2fs：<br>
-<code>-h：查看超级块信息</code></li>
-</ul>
-<h3 id="文件系统检测">文件系统检测：</h3>
-<pre><code>fsck: File System CheCk
-fsck.FS_TYPE
-fsck -t FS_TYPE
-	-a: 自动修复错误
-	-r: 交互式修复错误
-
-	Note: FS_TYPE一定要与分区上已经文件类型相同；
-
-e2fsck：ext系列文件专用的检测修复工具
-	-y：自动回答为yes; 
-	-f：强制修复；
-</code></pre>
-<h2 id="文件系统管理">文件系统管理：</h2>
-<ul>
-<li>
-<p>将额外文件系统与根文件系统某现存的目录建立起关联关系，进而使得此目录做为其它文件访问入口的行为称之为挂载；</p>
-</li>
-<li>
-<p>解除此关联关系的过程称之为卸载；</p>
-<ul>
-<li>把设备关联挂载点：Mount Point</li>
-</ul>
-<p><code>mount</code></p>
-<ul>
-<li>卸载时：可使用设备，也可以使用挂载点</li>
-</ul>
-<p><code>umount</code></p>
-</li>
-<li>
-<p>注意：挂载点下原有文件在挂载完成后会被临时隐藏；</p>
-</li>
-<li>
-<p>挂载方法：mount DEVICE MOUNT_POINT</p>
-<ul>
-<li>mount：通过查看/etc/mtab文件显示当前系统已挂载的所有设备<br>
-语法：<code>mount [-fnrsvw] [-t vfstype] [-o options] device dir</code>
-<ul>
-<li>device：指明要挂载的设备；
-<ul>
-<li>(1) 设备文件：例如/dev/sda5</li>
-<li>(2) 卷标：-L 'LABEL', 例如 -L 'MYDATA'</li>
-<li>(3) UUID, -U 'UUID'：例如 -U '0c50523c-43f1-45e7-85c0-a126711d406e'</li>
-<li>(4) 伪文件系统名称：proc, sysfs, devtmpfs, configfs</li>
-</ul>
-</li>
-<li>dir：挂载点
-<ul>
-<li>事先存在；建议使用空目录；</li>
-<li>进程正在使用中的设备无法被卸载；</li>
-</ul>
-</li>
-<li>mount 常用命令选项：</li>
-</ul>
-<pre><code>-t vsftype：指定要挂载的设备上的文件系统类型；
--r: readonly，只读挂载；
--w: read and write, 读写挂载；
--n: 不更新/etc/mtab； 
--a：自动挂载所有支持自动挂载的设备；(定义在了/etc/fstab文件中，且挂载选项中有“自动挂载”功能)
--L 'LABEL': 以卷标指定挂载设备；
--U 'UUID': 以UUID指定要挂载的设备；
--B, --bind: 绑定目录到另一个目录上；
-		注意：查看内核追踪到的已挂载的所有设备：cat /proc/mounts
--o options：(挂载文件系统的选项)
-	async：异步模式；
-	sync：同步模式；
-	atime/noatime：包含目录和文件；
-	diratime/nodiratime：目录的访问时间戳
-	auto/noauto：是否支持自动挂载
-	exec/noexec：是否支持将文件系统上应用程序运行为进程
-	dev/nodev：是否支持在此文件系统上使用设备文件；
-	suid/nosuid：
-	remount：重新挂载
-	ro：
-	rw:
-	user/nouser：是否允许普通用户挂载此设备
-	acl：启用此文件系统上的acl功能
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-<blockquote>
-<p>注意：上述选项可多个同时使用，彼此使用逗号分隔；</p>
-<blockquote>
-<p>默认挂载选项：defaults<br>
-<strong>rw, suid, dev, exec, auto, nouser, and async</strong></p>
-</blockquote>
-</blockquote>
-<ul>
-<li>卸载方法：umount</li>
-</ul>
-<pre><code># umount DEVICE
-# umount MOUNT_POINT
-</code></pre>
-<ul>
-<li>查看正在访问指定文件系统的进程：</li>
-</ul>
-<p><code># fuser -v MOUNT_POINT</code></p>
-<ul>
-<li>终止所有在正访问指定的文件系统的进程：</li>
-</ul>
-<p><code># fuser -km MOUNT_POINT</code></p>
-<ul>
-<li>挂载交换分区：
-<ul>
-<li>启用：swapon</li>
-<li>语法：<code>swapon [OPTION]... [DEVICE]</code></li>
-</ul>
-<pre><code>swapon [OPTION]... [DEVICE]
--a：激活所有的交换分区；
--p PRIORITY：指定优先级；
-</code></pre>
-<ul>
-<li>禁用：<code>swapoff [OPTION]... [DEVICE]</code></li>
-</ul>
-</li>
-<li>内存空间使用状态：</li>
-</ul>
-<pre><code>free [OPTION]
-	-m: 以MB为单位
-	-g: 以GB为单位
-</code></pre>
-<ul>
-<li>文件系统空间占用等信息的查看工具：</li>
-</ul>
-<pre><code>df:
-	-h: human-readable
-	-i：inodes instead of blocks
-	-P: 以Posix兼容的格式输出; 
-</code></pre>
-<ul>
-<li>查看某目录总体空间占用状态：</li>
-</ul>
-<pre><code>du：
-du [OPTION]... DIR
-	-h: human-readable
-	-s: summary
-</code></pre>
-<blockquote>
-<p>命令总结：mount, umount, free, df, du, swapon, swapoff, fuser</p>
-</blockquote>
-<ul>
-<li>文件挂载的配置文件：<code>/etc/fstab</code>
-<ul>
-<li>每行定义一个要挂载的文件系统；
-<blockquote>
-<p>要挂载的设备或伪文件系统\挂载点\文件系统类型\挂载选项\转储频率\自检次序\</p>
-</blockquote>
-<ul>
-<li>
-<p>要挂载的设备或伪文件系统：</p>
-<ul>
-<li>设备文件、LABEL(LABEL=&quot;&quot;)、UUID(UUID=&quot;&quot;)、伪文件系统名称(proc, sysfs)</li>
-</ul>
-</li>
-<li>
-<p>挂载选项：</p>
-<ul>
-<li>defaults</li>
-</ul>
-</li>
-<li>
-<p>转储频率：</p>
-<ul>
-<li>0：不做备份</li>
-<li>1：每天转储</li>
-<li>2：每隔一天转储</li>
-</ul>
-</li>
-<li>
-<p>自检次序：</p>
-<ul>
-<li>0：不自检</li>
-<li>1：首先自检；一般只有rootfs才用1；</li>
-<li>...</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>文件系统上的其它概念：
-<ul>
-<li>Inode: Index Node, 索引节点</li>
-<li>地址指针：
-<ul>
-<li>直接指针：</li>
-<li>间接指针：</li>
-<li>三级指针：</li>
-<li>inode bitmap：对位标识每个inode空闲与否的状态信息；</li>
-</ul>
-</li>
-<li>链接文件：
-<ul>
-<li>硬链接：</li>
-<li>不能够对目录进行；</li>
-<li>不能跨分区进行；</li>
-<li>指向同一个inode的多个不同路径；创建文件的硬链接即为为inode创建新的引用路径，因此会增加其引用计数；</li>
-<li>符号链接：
-<ul>
-<li>可以对目录进行；</li>
-<li>可以跨分区；</li>
-<li>指向的是另一个文件的路径；其大小为指向的路径字符串的长度；不增加或减少目标文件inode的引用计数；</li>
-</ul>
-</li>
-</ul>
-<pre><code>ln [-sv] SRC DEST
-	-s：symbolic link
-	-v: verbose
-</code></pre>
-</li>
-<li>文件管理操作对文件的影响：
-<ul>
-<li>文件删除：</li>
-<li>文件复制：</li>
-<li>文件移动：</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
 ]]></content>
     </entry>
 </feed>
