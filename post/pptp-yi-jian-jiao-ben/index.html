@@ -1,0 +1,289 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PPTP一键脚本 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1621232345030">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="PPTP一键脚本 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="#在X-shell中先安装lrzsz yum -y install lrzsz
+#!/bin/bash
+#
+# Author:  yeho &lt;lj2007331 AT gmail.com&gt;
+# Blog:  https://bl..." />
+    <meta name="keywords" content="梯子" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1621232345030" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              PPTP一键脚本
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-17
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/CIdV8-0oF/" class="post-tag">
+                  # 梯子
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <pre><code>#在X-shell中先安装lrzsz yum -y install lrzsz
+#!/bin/bash
+#
+# Author:  yeho &lt;lj2007331 AT gmail.com&gt;
+# Blog:  https://blog.linuxeye.com
+#
+# Installs a PPTP VPN-only system for CentOS
+
+# Check if user is root
+[ $(id -u) != &quot;0&quot; ] &amp;&amp; { echo -e &quot;\033[31mError: You must be root to run this script\033[0m&quot;; exit 1; } 
+
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+clear
+printf &quot;
+#######################################################################
+#    LNMP/LAMP/LANMP for CentOS/RedHat 5+ Debian 6+ and Ubuntu 12+    #
+#            Installs a PPTP VPN-only system for CentOS               #
+# For more information please visit https://blog.linuxeye.com/31.html #
+#######################################################################
+&quot;
+
+[ ! -e '/usr/bin/curl' ] &amp;&amp; yum -y install curl
+
+VPN_IP=`curl ipv4.icanhazip.com`
+
+VPN_USER=&quot;linuxeye&quot;
+VPN_PASS=&quot;linuxeye&quot;
+
+VPN_LOCAL=&quot;192.168.100.1&quot;
+VPN_REMOTE=&quot;192.168.100.50-250&quot;
+
+while :; do echo
+    read -p &quot;Please input username: &quot; VPN_USER 
+    [ -n &quot;$VPN_USER&quot; ] &amp;&amp; break
+done
+
+while :; do echo
+    read -p &quot;Please input password: &quot; VPN_PASS
+    [ -n &quot;$VPN_PASS&quot; ] &amp;&amp; break
+done
+clear
+
+
+if [ -f /etc/redhat-release -a -n &quot;`grep ' 7\.' /etc/redhat-release`&quot; ];then
+    #CentOS_REL=7
+    if [ ! -e /etc/yum.repos.d/epel.repo ];then
+        cat &gt; /etc/yum.repos.d/epel.repo &lt;&lt; EOF
+[epel]
+name=Extra Packages for Enterprise Linux 7 - \$basearch
+#baseurl=http://download.fedoraproject.org/pub/epel/7/\$basearch
+mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-7&amp;arch=\$basearch
+failovermethod=priority
+enabled=1
+gpgcheck=0
+EOF
+    fi
+    for Package in wget make openssl gcc-c++ ppp pptpd iptables iptables-services 
+    do
+        yum -y install $Package
+    done
+    echo 'net.ipv4.ip_forward = 1' &gt;&gt; /etc/sysctl.conf
+elif [ -f /etc/redhat-release -a -n &quot;`grep ' 6\.' /etc/redhat-release`&quot; ];then
+    #CentOS_REL=6
+    for Package in wget make openssl gcc-c++ iptables ppp 
+    do
+        yum -y install $Package
+    done
+    sed -i 's@net.ipv4.ip_forward.*@net.ipv4.ip_forward = 1@g' /etc/sysctl.conf
+    rpm -Uvh http://poptop.sourceforge.net/yum/stable/rhel6/pptp-release-current.noarch.rpm
+    yum -y install pptpd
+else
+    echo -e &quot;\033[31mDoes not support this OS, Please contact the author! \033[0m&quot;
+    exit 1
+fi
+
+echo &quot;1&quot; &gt; /proc/sys/net/ipv4/ip_forward
+
+sysctl -p /etc/sysctl.conf
+
+[ -z &quot;`grep '^localip' /etc/pptpd.conf`&quot; ] &amp;&amp; echo &quot;localip $VPN_LOCAL&quot; &gt;&gt; /etc/pptpd.conf # Local IP address of your VPN server
+[ -z &quot;`grep '^remoteip' /etc/pptpd.conf`&quot; ] &amp;&amp; echo &quot;remoteip $VPN_REMOTE&quot; &gt;&gt; /etc/pptpd.conf # Scope for your home network
+[ -z &quot;`grep '^stimeout' /etc/pptpd.conf`&quot; ] &amp;&amp; echo &quot;stimeout 172800&quot; &gt;&gt; /etc/pptpd.conf
+
+if [ -z &quot;`grep '^ms-dns' /etc/ppp/options.pptpd`&quot; ];then
+     cat &gt;&gt; /etc/ppp/options.pptpd &lt;&lt; EOF
+ms-dns 1.1.1.1
+#ms-dns 1.0.0.1
+ms-dns 8.8.8.8 # Google DNS Primary
+#ms-dns 8.8.4.4
+ms-dns 114.114.114.114
+#ms-dns 119.29.29.29
+
+EOF
+fi
+
+echo &quot;$VPN_USER pptpd $VPN_PASS *&quot; &gt;&gt; /etc/ppp/chap-secrets
+
+ETH=`route | grep default | awk '{print $NF}'`
+[ -z &quot;`grep '1723 -j ACCEPT' /etc/sysconfig/iptables`&quot; ] &amp;&amp; iptables -I INPUT 4 -p tcp -m state --state NEW -m tcp --dport 1723 -j ACCEPT
+[ -z &quot;`grep 'gre -j ACCEPT' /etc/sysconfig/iptables`&quot; ] &amp;&amp; iptables -I INPUT 5 -p gre -j ACCEPT 
+iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
+iptables -I FORWARD -p tcp --syn -i ppp+ -j TCPMSS --set-mss 1356
+service iptables save
+sed -i 's@^-A INPUT -j REJECT --reject-with icmp-host-prohibited@#-A INPUT -j REJECT --reject-with icmp-host-prohibited@' /etc/sysconfig/iptables 
+sed -i 's@^-A FORWARD -j REJECT --reject-with icmp-host-prohibited@#-A FORWARD -j REJECT --reject-with icmp-host-prohibited@' /etc/sysconfig/iptables 
+service iptables restart
+chkconfig iptables on
+
+service pptpd restart
+chkconfig pptpd on
+clear
+
+echo -e &quot;You can now connect to your VPN via your external IP \033[32m${VPN_IP}\033[0m&quot;
+
+echo -e &quot;Username: \033[32m${VPN_USER}\033[0m&quot;
+echo -e &quot;Password: \033[32m${VPN_PASS}\033[0m&quot;
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/l2tp-yi-jian-jiao-ben/">
+              <h3 class="post-title">
+                l2tp一键脚本
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

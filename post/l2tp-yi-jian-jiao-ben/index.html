@@ -1,0 +1,980 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>l2tp一键脚本 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1621232345030">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="l2tp一键脚本 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#===============..." />
+    <meta name="keywords" content="梯子" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1621232345030" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              l2tp一键脚本
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-17
+              </span>
+              <span>
+                24 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/CIdV8-0oF/" class="post-tag">
+                  # 梯子
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <pre><code>#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#=======================================================================#
+#   System Supported:  CentOS 6+ / Debian 7+ / Ubuntu 12+               #
+#   Description: L2TP VPN Auto Installer                                #
+#=======================================================================#
+cur_dir=`pwd`
+
+libreswan_filename=&quot;libreswan-3.27&quot;
+download_root_url=&quot;https://dl.lamp.sh/files&quot;
+
+rootness(){
+    if [[ $EUID -ne 0 ]]; then
+       echo &quot;Error:This script must be run as root!&quot; 1&gt;&amp;2
+       exit 1
+    fi
+}
+
+tunavailable(){
+    if [[ ! -e /dev/net/tun ]]; then
+        echo &quot;Error:TUN/TAP is not available!&quot; 1&gt;&amp;2
+        exit 1
+    fi
+}
+
+disable_selinux(){
+if [ -s /etc/selinux/config ] &amp;&amp; grep 'SELINUX=enforcing' /etc/selinux/config; then
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+    setenforce 0
+fi
+}
+
+get_opsy(){
+    [ -f /etc/redhat-release ] &amp;&amp; awk '{print ($1,$3~/^[0-9]/?$3:$4)}' /etc/redhat-release &amp;&amp; return
+    [ -f /etc/os-release ] &amp;&amp; awk -F'[= &quot;]' '/PRETTY_NAME/{print $3,$4,$5}' /etc/os-release &amp;&amp; return
+    [ -f /etc/lsb-release ] &amp;&amp; awk -F'[=&quot;]+' '/DESCRIPTION/{print $2}' /etc/lsb-release &amp;&amp; return
+}
+
+get_os_info(){
+    IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v &quot;^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\.&quot; | head -n 1 )
+    [ -z ${IP} ] &amp;&amp; IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
+
+    local cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+    local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+    local freq=$( awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+    local tram=$( free -m | awk '/Mem/ {print $2}' )
+    local swap=$( free -m | awk '/Swap/ {print $2}' )
+    local up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf(&quot;%ddays, %d:%d:%d\n&quot;,a,b,c,d)}' /proc/uptime )
+    local load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
+    local opsy=$( get_opsy )
+    local arch=$( uname -m )
+    local lbit=$( getconf LONG_BIT )
+    local host=$( hostname )
+    local kern=$( uname -r )
+
+    echo &quot;########## System Information ##########&quot;
+    echo 
+    echo &quot;CPU model            : ${cname}&quot;
+    echo &quot;Number of cores      : ${cores}&quot;
+    echo &quot;CPU frequency        : ${freq} MHz&quot;
+    echo &quot;Total amount of ram  : ${tram} MB&quot;
+    echo &quot;Total amount of swap : ${swap} MB&quot;
+    echo &quot;System uptime        : ${up}&quot;
+    echo &quot;Load average         : ${load}&quot;
+    echo &quot;OS                   : ${opsy}&quot;
+    echo &quot;Arch                 : ${arch} (${lbit} Bit)&quot;
+    echo &quot;Kernel               : ${kern}&quot;
+    echo &quot;Hostname             : ${host}&quot;
+    echo &quot;IPv4 address         : ${IP}&quot;
+    echo 
+    echo &quot;########################################&quot;
+}
+
+check_sys(){
+    local checkType=$1
+    local value=$2
+
+    local release=''
+    local systemPackage=''
+
+    if [[ -f /etc/redhat-release ]]; then
+        release=&quot;centos&quot;
+        systemPackage=&quot;yum&quot;
+    elif cat /etc/issue | grep -Eqi &quot;debian&quot;; then
+        release=&quot;debian&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /etc/issue | grep -Eqi &quot;ubuntu&quot;; then
+        release=&quot;ubuntu&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /etc/issue | grep -Eqi &quot;centos|red hat|redhat&quot;; then
+        release=&quot;centos&quot;
+        systemPackage=&quot;yum&quot;
+    elif cat /proc/version | grep -Eqi &quot;debian&quot;; then
+        release=&quot;debian&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /proc/version | grep -Eqi &quot;ubuntu&quot;; then
+        release=&quot;ubuntu&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /proc/version | grep -Eqi &quot;centos|red hat|redhat&quot;; then
+        release=&quot;centos&quot;
+        systemPackage=&quot;yum&quot;
+    fi
+
+    if [[ ${checkType} == &quot;sysRelease&quot; ]]; then
+        if [ &quot;$value&quot; == &quot;$release&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    elif [[ ${checkType} == &quot;packageManager&quot; ]]; then
+        if [ &quot;$value&quot; == &quot;$systemPackage&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+rand(){
+    index=0
+    str=&quot;&quot;
+    for i in {a..z}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {A..Z}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {0..9}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {1..10}; do str=&quot;$str${arr[$RANDOM%$index]}&quot;; done
+    echo ${str}
+}
+
+is_64bit(){
+    if [ `getconf WORD_BIT` = '32' ] &amp;&amp; [ `getconf LONG_BIT` = '64' ] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+download_file(){
+    if [ -s ${1} ]; then
+        echo &quot;$1 [found]&quot;
+    else
+        echo &quot;$1 not found!!!download now...&quot;
+        if ! wget -c -t3 -T60 ${download_root_url}/${1}; then
+            echo &quot;Failed to download $1, please download it to ${cur_dir} directory manually and try again.&quot;
+            exit 1
+        fi
+    fi
+}
+
+versionget(){
+    if [[ -s /etc/redhat-release ]];then
+        grep -oE  &quot;[0-9.]+&quot; /etc/redhat-release
+    else
+        grep -oE  &quot;[0-9.]+&quot; /etc/issue
+    fi
+}
+
+centosversion(){
+    if check_sys sysRelease centos;then
+        local code=${1}
+        local version=&quot;`versionget`&quot;
+        local main_ver=${version%%.*}
+        if [ &quot;${main_ver}&quot; == &quot;${code}&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+debianversion(){
+    if check_sys sysRelease debian;then
+        local version=$( get_opsy )
+        local code=${1}
+        local main_ver=$( echo ${version} | sed 's/[^0-9]//g')
+        if [ &quot;${main_ver}&quot; == &quot;${code}&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+version_check(){
+    if check_sys packageManager yum; then
+        if centosversion 5; then
+            echo &quot;Error: CentOS 5 is not supported, Please re-install OS and try again.&quot;
+            exit 1
+        fi
+    fi
+}
+
+get_char(){
+    SAVEDSTTY=`stty -g`
+    stty -echo
+    stty cbreak
+    dd if=/dev/tty bs=1 count=1 2&gt; /dev/null
+    stty -raw
+    stty echo
+    stty $SAVEDSTTY
+}
+
+preinstall_l2tp(){
+
+    echo
+    if [ -d &quot;/proc/vz&quot; ]; then
+        echo -e &quot;\033[41;37m WARNING: \033[0m Your VPS is based on OpenVZ, and IPSec might not be supported by the kernel.&quot;
+        echo &quot;Continue installation? (y/n)&quot;
+        read -p &quot;(Default: n)&quot; agree
+        [ -z ${agree} ] &amp;&amp; agree=&quot;n&quot;
+        if [ &quot;${agree}&quot; == &quot;n&quot; ]; then
+            echo
+            echo &quot;L2TP installation cancelled.&quot;
+            echo
+            exit 0
+        fi
+    fi
+    echo
+    echo &quot;Please enter IP-Range:&quot;
+    read -p &quot;(Default Range: 192.168.18):&quot; iprange
+    [ -z ${iprange} ] &amp;&amp; iprange=&quot;192.168.18&quot;
+
+    echo &quot;Please enter PSK:&quot;
+    read -p &quot;(Default PSK: teddysun.com):&quot; mypsk
+    [ -z ${mypsk} ] &amp;&amp; mypsk=&quot;teddysun.com&quot;
+
+    echo &quot;Please enter Username:&quot;
+    read -p &quot;(Default Username: teddysun):&quot; username
+    [ -z ${username} ] &amp;&amp; username=&quot;teddysun&quot;
+
+    password=`rand`
+    echo &quot;Please enter ${username}'s password:&quot;
+    read -p &quot;(Default Password: ${password}):&quot; tmppassword
+    [ ! -z ${tmppassword} ] &amp;&amp; password=${tmppassword}
+
+    echo
+    echo &quot;ServerIP:${IP}&quot;
+    echo &quot;Server Local IP:${iprange}.1&quot;
+    echo &quot;Client Remote IP Range:${iprange}.2-${iprange}.254&quot;
+    echo &quot;PSK:${mypsk}&quot;
+    echo
+    echo &quot;Press any key to start... or press Ctrl + C to cancel.&quot;
+    char=`get_char`
+
+}
+
+install_l2tp(){
+
+    mknod /dev/random c 1 9
+
+    if check_sys packageManager apt; then
+        apt-get -y update
+
+        if debianversion 7; then
+            if is_64bit; then
+                local libnspr4_filename1=&quot;libnspr4_4.10.7-1_amd64.deb&quot;
+                local libnspr4_filename2=&quot;libnspr4-0d_4.10.7-1_amd64.deb&quot;
+                local libnspr4_filename3=&quot;libnspr4-dev_4.10.7-1_amd64.deb&quot;
+                local libnspr4_filename4=&quot;libnspr4-dbg_4.10.7-1_amd64.deb&quot;
+                local libnss3_filename1=&quot;libnss3_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename2=&quot;libnss3-1d_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename3=&quot;libnss3-tools_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename4=&quot;libnss3-dev_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename5=&quot;libnss3-dbg_3.17.2-1.1_amd64.deb&quot;
+            else
+                local libnspr4_filename1=&quot;libnspr4_4.10.7-1_i386.deb&quot;
+                local libnspr4_filename2=&quot;libnspr4-0d_4.10.7-1_i386.deb&quot;
+                local libnspr4_filename3=&quot;libnspr4-dev_4.10.7-1_i386.deb&quot;
+                local libnspr4_filename4=&quot;libnspr4-dbg_4.10.7-1_i386.deb&quot;
+                local libnss3_filename1=&quot;libnss3_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename2=&quot;libnss3-1d_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename3=&quot;libnss3-tools_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename4=&quot;libnss3-dev_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename5=&quot;libnss3-dbg_3.17.2-1.1_i386.deb&quot;
+            fi
+            rm -rf ${cur_dir}/l2tp
+            mkdir -p ${cur_dir}/l2tp
+            cd ${cur_dir}/l2tp
+            download_file &quot;${libnspr4_filename1}&quot;
+            download_file &quot;${libnspr4_filename2}&quot;
+            download_file &quot;${libnspr4_filename3}&quot;
+            download_file &quot;${libnspr4_filename4}&quot;
+            download_file &quot;${libnss3_filename1}&quot;
+            download_file &quot;${libnss3_filename2}&quot;
+            download_file &quot;${libnss3_filename3}&quot;
+            download_file &quot;${libnss3_filename4}&quot;
+            download_file &quot;${libnss3_filename5}&quot;
+            dpkg -i ${libnspr4_filename1} ${libnspr4_filename2} ${libnspr4_filename3} ${libnspr4_filename4}
+            dpkg -i ${libnss3_filename1} ${libnss3_filename2} ${libnss3_filename3} ${libnss3_filename4} ${libnss3_filename5}
+
+            apt-get -y install wget gcc ppp flex bison make pkg-config libpam0g-dev libcap-ng-dev iptables \
+                               libcap-ng-utils libunbound-dev libevent-dev libcurl4-nss-dev libsystemd-daemon-dev
+        else
+            apt-get -y install wget gcc ppp flex bison make python libnss3-dev libnss3-tools libselinux-dev iptables \
+                               libnspr4-dev pkg-config libpam0g-dev libcap-ng-dev libcap-ng-utils libunbound-dev \
+                               libevent-dev libcurl4-nss-dev libsystemd-dev
+        fi
+        apt-get -y --no-install-recommends install xmlto
+        apt-get -y install xl2tpd
+
+        compile_install
+    elif check_sys packageManager yum; then
+        echo &quot;Adding the EPEL repository...&quot;
+        yum -y install epel-release yum-utils
+        [ ! -f /etc/yum.repos.d/epel.repo ] &amp;&amp; echo &quot;Install EPEL repository failed, please check it.&quot; &amp;&amp; exit 1
+        yum-config-manager --enable epel
+        echo &quot;Adding the EPEL repository complete...&quot;
+
+        if centosversion 7; then
+            yum -y install ppp libreswan xl2tpd firewalld
+            yum_install
+        elif centosversion 6; then
+            yum -y remove libevent-devel
+            yum -y install libevent2-devel
+            yum -y install nss-devel nspr-devel pkgconfig pam-devel \
+                           libcap-ng-devel libselinux-devel lsof \
+                           curl-devel flex bison gcc ppp make iptables gmp-devel \
+                           fipscheck-devel unbound-devel xmlto libpcap-devel xl2tpd
+
+            compile_install
+        fi
+    fi
+
+}
+
+config_install(){
+
+    cat &gt; /etc/ipsec.conf&lt;&lt;EOF
+version 2.0
+
+config setup
+    protostack=netkey
+    nhelpers=0
+    uniqueids=no
+    interfaces=%defaultroute
+    virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!${iprange}.0/24
+
+conn l2tp-psk
+    rightsubnet=vhost:%priv
+    also=l2tp-psk-nonat
+
+conn l2tp-psk-nonat
+    authby=secret
+    pfs=no
+    auto=add
+    keyingtries=3
+    rekey=no
+    ikelifetime=8h
+    keylife=1h
+    type=transport
+    left=%defaultroute
+    leftid=${IP}
+    leftprotoport=17/1701
+    right=%any
+    rightprotoport=17/%any
+    dpddelay=40
+    dpdtimeout=130
+    dpdaction=clear
+    sha2-truncbug=yes
+EOF
+
+    cat &gt; /etc/ipsec.secrets&lt;&lt;EOF
+%any %any : PSK &quot;${mypsk}&quot;
+EOF
+
+    cat &gt; /etc/xl2tpd/xl2tpd.conf&lt;&lt;EOF
+[global]
+port = 1701
+
+[lns default]
+ip range = ${iprange}.2-${iprange}.254
+local ip = ${iprange}.1
+require chap = yes
+refuse pap = yes
+require authentication = yes
+name = l2tpd
+ppp debug = yes
+pppoptfile = /etc/ppp/options.xl2tpd
+length bit = yes
+EOF
+
+    cat &gt; /etc/ppp/options.xl2tpd&lt;&lt;EOF
+ipcp-accept-local
+ipcp-accept-remote
+require-mschap-v2
+ms-dns 8.8.8.8
+ms-dns 8.8.4.4
+noccp
+auth
+hide-password
+idle 1800
+mtu 1410
+mru 1410
+nodefaultroute
+debug
+proxyarp
+connect-delay 5000
+EOF
+
+    rm -f /etc/ppp/chap-secrets
+    cat &gt; /etc/ppp/chap-secrets&lt;&lt;EOF
+# Secrets for authentication using CHAP
+# client    server    secret    IP addresses
+${username}    l2tpd    ${password}       *
+EOF
+
+}
+
+compile_install(){
+
+    rm -rf ${cur_dir}/l2tp
+    mkdir -p ${cur_dir}/l2tp
+    cd ${cur_dir}/l2tp
+    download_file &quot;${libreswan_filename}.tar.gz&quot;
+    tar -zxf ${libreswan_filename}.tar.gz
+
+    cd ${cur_dir}/l2tp/${libreswan_filename}
+        cat &gt; Makefile.inc.local &lt;&lt;'EOF'
+WERROR_CFLAGS =
+USE_DNSSEC = false
+USE_DH31 = false
+USE_GLIBC_KERN_FLIP_HEADERS = true
+EOF
+    make programs &amp;&amp; make install
+
+    /usr/local/sbin/ipsec --version &gt;/dev/null 2&gt;&amp;1
+    if [ $? -ne 0 ]; then
+        echo &quot;${libreswan_filename} install failed.&quot;
+        exit 1
+    fi
+
+    config_install
+
+    cp -pf /etc/sysctl.conf /etc/sysctl.conf.bak
+
+    sed -i 's/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/g' /etc/sysctl.conf
+
+    for each in `ls /proc/sys/net/ipv4/conf/`; do
+        echo &quot;net.ipv4.conf.${each}.accept_source_route=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.accept_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.send_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.rp_filter=0&quot; &gt;&gt; /etc/sysctl.conf
+    done
+    sysctl -p
+
+    if centosversion 6; then
+        [ -f /etc/sysconfig/iptables ] &amp;&amp; cp -pf /etc/sysconfig/iptables /etc/sysconfig/iptables.old.`date +%Y%m%d`
+
+        if [ &quot;`iptables -L -n | grep -c '\-\-'`&quot; == &quot;0&quot; ]; then
+            cat &gt; /etc/sysconfig/iptables &lt;&lt;EOF
+# Added by L2TP VPN script
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+-A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s ${iprange}.0/24  -j ACCEPT
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+COMMIT
+EOF
+        else
+            iptables -I INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+            iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+            iptables -I FORWARD -s ${iprange}.0/24  -j ACCEPT
+            iptables -t nat -A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+            /etc/init.d/iptables save
+        fi
+
+        if [ ! -f /etc/ipsec.d/cert9.db ]; then
+           echo &gt; /var/tmp/libreswan-nss-pwd
+           certutil -N -f /var/tmp/libreswan-nss-pwd -d /etc/ipsec.d
+           rm -f /var/tmp/libreswan-nss-pwd
+        fi
+
+        chkconfig --add iptables
+        chkconfig iptables on
+        chkconfig --add ipsec
+        chkconfig ipsec on
+        chkconfig --add xl2tpd
+        chkconfig xl2tpd on
+
+        /etc/init.d/iptables restart
+        /etc/init.d/ipsec start
+        /etc/init.d/xl2tpd start
+
+    else
+        [ -f /etc/iptables.rules ] &amp;&amp; cp -pf /etc/iptables.rules /etc/iptables.rules.old.`date +%Y%m%d`
+
+        if [ &quot;`iptables -L -n | grep -c '\-\-'`&quot; == &quot;0&quot; ]; then
+            cat &gt; /etc/iptables.rules &lt;&lt;EOF
+# Added by L2TP VPN script
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+-A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s ${iprange}.0/24  -j ACCEPT
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+COMMIT
+EOF
+        else
+            iptables -I INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+            iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+            iptables -I FORWARD -s ${iprange}.0/24  -j ACCEPT
+            iptables -t nat -A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+            /sbin/iptables-save &gt; /etc/iptables.rules
+        fi
+
+        cat &gt; /etc/network/if-up.d/iptables &lt;&lt;EOF
+#!/bin/sh
+/sbin/iptables-restore &lt; /etc/iptables.rules
+EOF
+        chmod +x /etc/network/if-up.d/iptables
+
+        if [ ! -f /etc/ipsec.d/cert9.db ]; then
+           echo &gt; /var/tmp/libreswan-nss-pwd
+           certutil -N -f /var/tmp/libreswan-nss-pwd -d /etc/ipsec.d
+           rm -f /var/tmp/libreswan-nss-pwd
+        fi
+
+        update-rc.d -f xl2tpd defaults
+
+        cp -f /etc/rc.local /etc/rc.local.old.`date +%Y%m%d`
+        sed --follow-symlinks -i -e '/^exit 0/d' /etc/rc.local
+        cat &gt;&gt; /etc/rc.local &lt;&lt;EOF
+
+# Added by L2TP VPN script
+echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+/usr/sbin/service ipsec start
+exit 0
+EOF
+        chmod +x /etc/rc.local
+        echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+
+        /sbin/iptables-restore &lt; /etc/iptables.rules
+        /usr/sbin/service ipsec start
+        /usr/sbin/service xl2tpd restart
+
+    fi
+
+}
+
+yum_install(){
+
+    config_install
+
+    cp -pf /etc/sysctl.conf /etc/sysctl.conf.bak
+
+    echo &quot;# Added by L2TP VPN&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.ip_forward=1&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.tcp_syncookies=1&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.icmp_echo_ignore_broadcasts=1&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.icmp_ignore_bogus_error_responses=1&quot; &gt;&gt; /etc/sysctl.conf
+
+    for each in `ls /proc/sys/net/ipv4/conf/`; do
+        echo &quot;net.ipv4.conf.${each}.accept_source_route=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.accept_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.send_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.rp_filter=0&quot; &gt;&gt; /etc/sysctl.conf
+    done
+    sysctl -p
+
+    cat &gt; /etc/firewalld/services/xl2tpd.xml&lt;&lt;EOF
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;service&gt;
+  &lt;short&gt;xl2tpd&lt;/short&gt;
+  &lt;description&gt;L2TP IPSec&lt;/description&gt;
+  &lt;port protocol=&quot;udp&quot; port=&quot;4500&quot;/&gt;
+  &lt;port protocol=&quot;udp&quot; port=&quot;1701&quot;/&gt;
+&lt;/service&gt;
+EOF
+    chmod 640 /etc/firewalld/services/xl2tpd.xml
+
+    systemctl enable ipsec
+    systemctl enable xl2tpd
+    systemctl enable firewalld
+
+    systemctl status firewalld &gt; /dev/null 2&gt;&amp;1
+    if [ $? -eq 0 ]; then
+        firewall-cmd --reload
+        echo &quot;Checking firewalld status...&quot;
+        firewall-cmd --list-all
+        echo &quot;add firewalld rules...&quot;
+        firewall-cmd --permanent --add-service=ipsec
+        firewall-cmd --permanent --add-service=xl2tpd
+        firewall-cmd --permanent --add-masquerade
+        firewall-cmd --reload
+    else
+        echo &quot;Firewalld looks like not running, trying to start...&quot;
+        systemctl start firewalld
+        if [ $? -eq 0 ]; then
+            echo &quot;Firewalld start successfully...&quot;
+            firewall-cmd --reload
+            echo &quot;Checking firewalld status...&quot;
+            firewall-cmd --list-all
+            echo &quot;adding firewalld rules...&quot;
+            firewall-cmd --permanent --add-service=ipsec
+            firewall-cmd --permanent --add-service=xl2tpd
+            firewall-cmd --permanent --add-masquerade
+            firewall-cmd --reload
+        else
+            echo &quot;Failed to start firewalld. please enable udp port 500 4500 1701 manually if necessary.&quot;
+        fi
+    fi
+
+    systemctl restart ipsec
+    systemctl restart xl2tpd
+    echo &quot;Checking ipsec status...&quot;
+    systemctl -a | grep ipsec
+    echo &quot;Checking xl2tpd status...&quot;
+    systemctl -a | grep xl2tpd
+    echo &quot;Checking firewalld status...&quot;
+    firewall-cmd --list-all
+
+}
+
+finally(){
+
+    cd ${cur_dir}
+    rm -fr ${cur_dir}/l2tp
+    # create l2tp command
+    cp -f ${cur_dir}/`basename $0` /usr/bin/l2tp
+
+    echo &quot;Please wait a moment...&quot;
+    sleep 5
+    ipsec verify
+    echo
+    echo &quot;###############################################################&quot;
+    echo &quot;# L2TP VPN Auto Installer                                     #&quot;
+    echo &quot;# System Supported: CentOS 6+ / Debian 7+ / Ubuntu 12+        #&quot;
+    echo &quot;# Intro: https://teddysun.com/448.html                        #&quot;
+    echo &quot;# Author: Teddysun &lt;i@teddysun.com&gt;                           #&quot;
+    echo &quot;###############################################################&quot;
+    echo &quot;If there is no [FAILED] above, you can connect to your L2TP &quot;
+    echo &quot;VPN Server with the default Username/Password is below:&quot;
+    echo
+    echo &quot;Server IP: ${IP}&quot;
+    echo &quot;PSK      : ${mypsk}&quot;
+    echo &quot;Username : ${username}&quot;
+    echo &quot;Password : ${password}&quot;
+    echo
+    echo &quot;If you want to modify user settings, please use below command(s):&quot;
+    echo &quot;l2tp -a (Add a user)&quot;
+    echo &quot;l2tp -d (Delete a user)&quot;
+    echo &quot;l2tp -l (List all users)&quot;
+    echo &quot;l2tp -m (Modify a user password)&quot;
+    echo
+    echo &quot;Welcome to visit our website: https://teddysun.com/448.html&quot;
+    echo &quot;Enjoy it!&quot;
+    echo
+}
+
+
+l2tp(){
+    clear
+    echo
+    echo &quot;###############################################################&quot;
+    echo &quot;# L2TP VPN Auto Installer                                     #&quot;
+    echo &quot;# System Supported: CentOS 6+ / Debian 7+ / Ubuntu 12+        #&quot;
+    echo &quot;# Intro: https://teddysun.com/448.html                        #&quot;
+    echo &quot;# Author: Teddysun &lt;i@teddysun.com&gt;                           #&quot;
+    echo &quot;###############################################################&quot;
+    echo
+    rootness
+    tunavailable
+    disable_selinux
+    version_check
+    get_os_info
+    preinstall_l2tp
+    install_l2tp
+    finally
+}
+
+list_users(){
+    if [ ! -f /etc/ppp/chap-secrets ];then
+        echo &quot;Error: /etc/ppp/chap-secrets file not found.&quot;
+        exit 1
+    fi
+    local line=&quot;+-------------------------------------------+\n&quot;
+    local string=%20s
+    printf &quot;${line}|${string} |${string} |\n${line}&quot; Username Password
+    grep -v &quot;^#&quot; /etc/ppp/chap-secrets | awk '{printf &quot;|'${string}' |'${string}' |\n&quot;, $1,$3}'
+    printf ${line}
+}
+
+add_user(){
+    while :
+    do
+        read -p &quot;Please input your Username:&quot; user
+        if [ -z ${user} ]; then
+            echo &quot;Username can not be empty&quot;
+        else
+            grep -w &quot;${user}&quot; /etc/ppp/chap-secrets &gt; /dev/null 2&gt;&amp;1
+            if [ $? -eq 0 ];then
+                echo &quot;Username (${user}) already exists. Please re-enter your username.&quot;
+            else
+                break
+            fi
+        fi
+    done
+    pass=`rand`
+    echo &quot;Please input ${user}'s password:&quot;
+    read -p &quot;(Default Password: ${pass}):&quot; tmppass
+    [ ! -z ${tmppass} ] &amp;&amp; pass=${tmppass}
+    echo &quot;${user}    l2tpd    ${pass}       *&quot; &gt;&gt; /etc/ppp/chap-secrets
+    echo &quot;Username (${user}) add completed.&quot;
+}
+
+del_user(){
+    while :
+    do
+        read -p &quot;Please input Username you want to delete it:&quot; user
+        if [ -z ${user} ]; then
+            echo &quot;Username can not be empty&quot;
+        else
+            grep -w &quot;${user}&quot; /etc/ppp/chap-secrets &gt;/dev/null 2&gt;&amp;1
+            if [ $? -eq 0 ];then
+                break
+            else
+                echo &quot;Username (${user}) is not exists. Please re-enter your username.&quot;
+            fi
+        fi
+    done
+    sed -i &quot;/^\&lt;${user}\&gt;/d&quot; /etc/ppp/chap-secrets
+    echo &quot;Username (${user}) delete completed.&quot;
+}
+
+mod_user(){
+    while :
+    do
+        read -p &quot;Please input Username you want to change password:&quot; user
+        if [ -z ${user} ]; then
+            echo &quot;Username can not be empty&quot;
+        else
+            grep -w &quot;${user}&quot; /etc/ppp/chap-secrets &gt;/dev/null 2&gt;&amp;1
+            if [ $? -eq 0 ];then
+                break
+            else
+                echo &quot;Username (${user}) is not exists. Please re-enter your username.&quot;
+            fi
+        fi
+    done
+    pass=`rand`
+    echo &quot;Please input ${user}'s new password:&quot;
+    read -p &quot;(Default Password: ${pass}):&quot; tmppass
+    [ ! -z ${tmppass} ] &amp;&amp; pass=${tmppass}
+    sed -i &quot;/^\&lt;${user}\&gt;/d&quot; /etc/ppp/chap-secrets
+    echo &quot;${user}    l2tpd    ${pass}       *&quot; &gt;&gt; /etc/ppp/chap-secrets
+    echo &quot;Username ${user}'s password has been changed.&quot;
+}
+
+# Main process
+action=$1
+if [ -z ${action} ] &amp;&amp; [ &quot;`basename $0`&quot; != &quot;l2tp&quot; ]; then
+    action=install
+fi
+
+case ${action} in
+    install)
+        l2tp 2&gt;&amp;1 | tee ${cur_dir}/l2tp.log
+        ;;
+    -l|--list)
+        list_users
+        ;;
+    -a|--add)
+        add_user
+        ;;
+    -d|--del)
+        del_user
+        ;;
+    -m|--mod)
+        mod_user
+        ;;
+    -h|--help)
+        echo &quot;Usage: `basename $0` -l,--list   List all users&quot;
+        echo &quot;       `basename $0` -a,--add    Add a user&quot;
+        echo &quot;       `basename $0` -d,--del    Delete a user&quot;
+        echo &quot;       `basename $0` -m,--mod    Modify a user password&quot;
+        echo &quot;       `basename $0` -h,--help   Print this help information&quot;
+        ;;
+    *)
+        echo &quot;Usage: `basename $0` [-l,--list|-a,--add|-d,--del|-m,--mod|-h,--help]&quot; &amp;&amp; exit
+        ;;
+esac
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/nei-he-sheng-ji/">
+              <h3 class="post-title">
+                内核升级
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

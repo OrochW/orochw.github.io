@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://orochw.github.io</id>
     <title>Gridea</title>
-    <updated>2021-05-17T04:10:13.640Z</updated>
+    <updated>2021-05-17T06:19:07.054Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://orochw.github.io"/>
     <link rel="self" href="https://orochw.github.io/atom.xml"/>
@@ -10,6 +10,948 @@
     <logo>https://orochw.github.io/images/avatar.png</logo>
     <icon>https://orochw.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[PPTP一键脚本]]></title>
+        <id>https://orochw.github.io/post/pptp-yi-jian-jiao-ben/</id>
+        <link href="https://orochw.github.io/post/pptp-yi-jian-jiao-ben/">
+        </link>
+        <updated>2021-05-17T06:18:42.000Z</updated>
+        <content type="html"><![CDATA[<pre><code>#在X-shell中先安装lrzsz yum -y install lrzsz
+#!/bin/bash
+#
+# Author:  yeho &lt;lj2007331 AT gmail.com&gt;
+# Blog:  https://blog.linuxeye.com
+#
+# Installs a PPTP VPN-only system for CentOS
+
+# Check if user is root
+[ $(id -u) != &quot;0&quot; ] &amp;&amp; { echo -e &quot;\033[31mError: You must be root to run this script\033[0m&quot;; exit 1; } 
+
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+clear
+printf &quot;
+#######################################################################
+#    LNMP/LAMP/LANMP for CentOS/RedHat 5+ Debian 6+ and Ubuntu 12+    #
+#            Installs a PPTP VPN-only system for CentOS               #
+# For more information please visit https://blog.linuxeye.com/31.html #
+#######################################################################
+&quot;
+
+[ ! -e '/usr/bin/curl' ] &amp;&amp; yum -y install curl
+
+VPN_IP=`curl ipv4.icanhazip.com`
+
+VPN_USER=&quot;linuxeye&quot;
+VPN_PASS=&quot;linuxeye&quot;
+
+VPN_LOCAL=&quot;192.168.100.1&quot;
+VPN_REMOTE=&quot;192.168.100.50-250&quot;
+
+while :; do echo
+    read -p &quot;Please input username: &quot; VPN_USER 
+    [ -n &quot;$VPN_USER&quot; ] &amp;&amp; break
+done
+
+while :; do echo
+    read -p &quot;Please input password: &quot; VPN_PASS
+    [ -n &quot;$VPN_PASS&quot; ] &amp;&amp; break
+done
+clear
+
+
+if [ -f /etc/redhat-release -a -n &quot;`grep ' 7\.' /etc/redhat-release`&quot; ];then
+    #CentOS_REL=7
+    if [ ! -e /etc/yum.repos.d/epel.repo ];then
+        cat &gt; /etc/yum.repos.d/epel.repo &lt;&lt; EOF
+[epel]
+name=Extra Packages for Enterprise Linux 7 - \$basearch
+#baseurl=http://download.fedoraproject.org/pub/epel/7/\$basearch
+mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-7&amp;arch=\$basearch
+failovermethod=priority
+enabled=1
+gpgcheck=0
+EOF
+    fi
+    for Package in wget make openssl gcc-c++ ppp pptpd iptables iptables-services 
+    do
+        yum -y install $Package
+    done
+    echo 'net.ipv4.ip_forward = 1' &gt;&gt; /etc/sysctl.conf
+elif [ -f /etc/redhat-release -a -n &quot;`grep ' 6\.' /etc/redhat-release`&quot; ];then
+    #CentOS_REL=6
+    for Package in wget make openssl gcc-c++ iptables ppp 
+    do
+        yum -y install $Package
+    done
+    sed -i 's@net.ipv4.ip_forward.*@net.ipv4.ip_forward = 1@g' /etc/sysctl.conf
+    rpm -Uvh http://poptop.sourceforge.net/yum/stable/rhel6/pptp-release-current.noarch.rpm
+    yum -y install pptpd
+else
+    echo -e &quot;\033[31mDoes not support this OS, Please contact the author! \033[0m&quot;
+    exit 1
+fi
+
+echo &quot;1&quot; &gt; /proc/sys/net/ipv4/ip_forward
+
+sysctl -p /etc/sysctl.conf
+
+[ -z &quot;`grep '^localip' /etc/pptpd.conf`&quot; ] &amp;&amp; echo &quot;localip $VPN_LOCAL&quot; &gt;&gt; /etc/pptpd.conf # Local IP address of your VPN server
+[ -z &quot;`grep '^remoteip' /etc/pptpd.conf`&quot; ] &amp;&amp; echo &quot;remoteip $VPN_REMOTE&quot; &gt;&gt; /etc/pptpd.conf # Scope for your home network
+[ -z &quot;`grep '^stimeout' /etc/pptpd.conf`&quot; ] &amp;&amp; echo &quot;stimeout 172800&quot; &gt;&gt; /etc/pptpd.conf
+
+if [ -z &quot;`grep '^ms-dns' /etc/ppp/options.pptpd`&quot; ];then
+     cat &gt;&gt; /etc/ppp/options.pptpd &lt;&lt; EOF
+ms-dns 1.1.1.1
+#ms-dns 1.0.0.1
+ms-dns 8.8.8.8 # Google DNS Primary
+#ms-dns 8.8.4.4
+ms-dns 114.114.114.114
+#ms-dns 119.29.29.29
+
+EOF
+fi
+
+echo &quot;$VPN_USER pptpd $VPN_PASS *&quot; &gt;&gt; /etc/ppp/chap-secrets
+
+ETH=`route | grep default | awk '{print $NF}'`
+[ -z &quot;`grep '1723 -j ACCEPT' /etc/sysconfig/iptables`&quot; ] &amp;&amp; iptables -I INPUT 4 -p tcp -m state --state NEW -m tcp --dport 1723 -j ACCEPT
+[ -z &quot;`grep 'gre -j ACCEPT' /etc/sysconfig/iptables`&quot; ] &amp;&amp; iptables -I INPUT 5 -p gre -j ACCEPT 
+iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
+iptables -I FORWARD -p tcp --syn -i ppp+ -j TCPMSS --set-mss 1356
+service iptables save
+sed -i 's@^-A INPUT -j REJECT --reject-with icmp-host-prohibited@#-A INPUT -j REJECT --reject-with icmp-host-prohibited@' /etc/sysconfig/iptables 
+sed -i 's@^-A FORWARD -j REJECT --reject-with icmp-host-prohibited@#-A FORWARD -j REJECT --reject-with icmp-host-prohibited@' /etc/sysconfig/iptables 
+service iptables restart
+chkconfig iptables on
+
+service pptpd restart
+chkconfig pptpd on
+clear
+
+echo -e &quot;You can now connect to your VPN via your external IP \033[32m${VPN_IP}\033[0m&quot;
+
+echo -e &quot;Username: \033[32m${VPN_USER}\033[0m&quot;
+echo -e &quot;Password: \033[32m${VPN_PASS}\033[0m&quot;
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[l2tp一键脚本]]></title>
+        <id>https://orochw.github.io/post/l2tp-yi-jian-jiao-ben/</id>
+        <link href="https://orochw.github.io/post/l2tp-yi-jian-jiao-ben/">
+        </link>
+        <updated>2021-05-17T06:17:02.000Z</updated>
+        <content type="html"><![CDATA[<pre><code>#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#=======================================================================#
+#   System Supported:  CentOS 6+ / Debian 7+ / Ubuntu 12+               #
+#   Description: L2TP VPN Auto Installer                                #
+#=======================================================================#
+cur_dir=`pwd`
+
+libreswan_filename=&quot;libreswan-3.27&quot;
+download_root_url=&quot;https://dl.lamp.sh/files&quot;
+
+rootness(){
+    if [[ $EUID -ne 0 ]]; then
+       echo &quot;Error:This script must be run as root!&quot; 1&gt;&amp;2
+       exit 1
+    fi
+}
+
+tunavailable(){
+    if [[ ! -e /dev/net/tun ]]; then
+        echo &quot;Error:TUN/TAP is not available!&quot; 1&gt;&amp;2
+        exit 1
+    fi
+}
+
+disable_selinux(){
+if [ -s /etc/selinux/config ] &amp;&amp; grep 'SELINUX=enforcing' /etc/selinux/config; then
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+    setenforce 0
+fi
+}
+
+get_opsy(){
+    [ -f /etc/redhat-release ] &amp;&amp; awk '{print ($1,$3~/^[0-9]/?$3:$4)}' /etc/redhat-release &amp;&amp; return
+    [ -f /etc/os-release ] &amp;&amp; awk -F'[= &quot;]' '/PRETTY_NAME/{print $3,$4,$5}' /etc/os-release &amp;&amp; return
+    [ -f /etc/lsb-release ] &amp;&amp; awk -F'[=&quot;]+' '/DESCRIPTION/{print $2}' /etc/lsb-release &amp;&amp; return
+}
+
+get_os_info(){
+    IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v &quot;^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\.&quot; | head -n 1 )
+    [ -z ${IP} ] &amp;&amp; IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
+
+    local cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+    local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+    local freq=$( awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+    local tram=$( free -m | awk '/Mem/ {print $2}' )
+    local swap=$( free -m | awk '/Swap/ {print $2}' )
+    local up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf(&quot;%ddays, %d:%d:%d\n&quot;,a,b,c,d)}' /proc/uptime )
+    local load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
+    local opsy=$( get_opsy )
+    local arch=$( uname -m )
+    local lbit=$( getconf LONG_BIT )
+    local host=$( hostname )
+    local kern=$( uname -r )
+
+    echo &quot;########## System Information ##########&quot;
+    echo 
+    echo &quot;CPU model            : ${cname}&quot;
+    echo &quot;Number of cores      : ${cores}&quot;
+    echo &quot;CPU frequency        : ${freq} MHz&quot;
+    echo &quot;Total amount of ram  : ${tram} MB&quot;
+    echo &quot;Total amount of swap : ${swap} MB&quot;
+    echo &quot;System uptime        : ${up}&quot;
+    echo &quot;Load average         : ${load}&quot;
+    echo &quot;OS                   : ${opsy}&quot;
+    echo &quot;Arch                 : ${arch} (${lbit} Bit)&quot;
+    echo &quot;Kernel               : ${kern}&quot;
+    echo &quot;Hostname             : ${host}&quot;
+    echo &quot;IPv4 address         : ${IP}&quot;
+    echo 
+    echo &quot;########################################&quot;
+}
+
+check_sys(){
+    local checkType=$1
+    local value=$2
+
+    local release=''
+    local systemPackage=''
+
+    if [[ -f /etc/redhat-release ]]; then
+        release=&quot;centos&quot;
+        systemPackage=&quot;yum&quot;
+    elif cat /etc/issue | grep -Eqi &quot;debian&quot;; then
+        release=&quot;debian&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /etc/issue | grep -Eqi &quot;ubuntu&quot;; then
+        release=&quot;ubuntu&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /etc/issue | grep -Eqi &quot;centos|red hat|redhat&quot;; then
+        release=&quot;centos&quot;
+        systemPackage=&quot;yum&quot;
+    elif cat /proc/version | grep -Eqi &quot;debian&quot;; then
+        release=&quot;debian&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /proc/version | grep -Eqi &quot;ubuntu&quot;; then
+        release=&quot;ubuntu&quot;
+        systemPackage=&quot;apt&quot;
+    elif cat /proc/version | grep -Eqi &quot;centos|red hat|redhat&quot;; then
+        release=&quot;centos&quot;
+        systemPackage=&quot;yum&quot;
+    fi
+
+    if [[ ${checkType} == &quot;sysRelease&quot; ]]; then
+        if [ &quot;$value&quot; == &quot;$release&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    elif [[ ${checkType} == &quot;packageManager&quot; ]]; then
+        if [ &quot;$value&quot; == &quot;$systemPackage&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+rand(){
+    index=0
+    str=&quot;&quot;
+    for i in {a..z}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {A..Z}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {0..9}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {1..10}; do str=&quot;$str${arr[$RANDOM%$index]}&quot;; done
+    echo ${str}
+}
+
+is_64bit(){
+    if [ `getconf WORD_BIT` = '32' ] &amp;&amp; [ `getconf LONG_BIT` = '64' ] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+download_file(){
+    if [ -s ${1} ]; then
+        echo &quot;$1 [found]&quot;
+    else
+        echo &quot;$1 not found!!!download now...&quot;
+        if ! wget -c -t3 -T60 ${download_root_url}/${1}; then
+            echo &quot;Failed to download $1, please download it to ${cur_dir} directory manually and try again.&quot;
+            exit 1
+        fi
+    fi
+}
+
+versionget(){
+    if [[ -s /etc/redhat-release ]];then
+        grep -oE  &quot;[0-9.]+&quot; /etc/redhat-release
+    else
+        grep -oE  &quot;[0-9.]+&quot; /etc/issue
+    fi
+}
+
+centosversion(){
+    if check_sys sysRelease centos;then
+        local code=${1}
+        local version=&quot;`versionget`&quot;
+        local main_ver=${version%%.*}
+        if [ &quot;${main_ver}&quot; == &quot;${code}&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+debianversion(){
+    if check_sys sysRelease debian;then
+        local version=$( get_opsy )
+        local code=${1}
+        local main_ver=$( echo ${version} | sed 's/[^0-9]//g')
+        if [ &quot;${main_ver}&quot; == &quot;${code}&quot; ];then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+version_check(){
+    if check_sys packageManager yum; then
+        if centosversion 5; then
+            echo &quot;Error: CentOS 5 is not supported, Please re-install OS and try again.&quot;
+            exit 1
+        fi
+    fi
+}
+
+get_char(){
+    SAVEDSTTY=`stty -g`
+    stty -echo
+    stty cbreak
+    dd if=/dev/tty bs=1 count=1 2&gt; /dev/null
+    stty -raw
+    stty echo
+    stty $SAVEDSTTY
+}
+
+preinstall_l2tp(){
+
+    echo
+    if [ -d &quot;/proc/vz&quot; ]; then
+        echo -e &quot;\033[41;37m WARNING: \033[0m Your VPS is based on OpenVZ, and IPSec might not be supported by the kernel.&quot;
+        echo &quot;Continue installation? (y/n)&quot;
+        read -p &quot;(Default: n)&quot; agree
+        [ -z ${agree} ] &amp;&amp; agree=&quot;n&quot;
+        if [ &quot;${agree}&quot; == &quot;n&quot; ]; then
+            echo
+            echo &quot;L2TP installation cancelled.&quot;
+            echo
+            exit 0
+        fi
+    fi
+    echo
+    echo &quot;Please enter IP-Range:&quot;
+    read -p &quot;(Default Range: 192.168.18):&quot; iprange
+    [ -z ${iprange} ] &amp;&amp; iprange=&quot;192.168.18&quot;
+
+    echo &quot;Please enter PSK:&quot;
+    read -p &quot;(Default PSK: teddysun.com):&quot; mypsk
+    [ -z ${mypsk} ] &amp;&amp; mypsk=&quot;teddysun.com&quot;
+
+    echo &quot;Please enter Username:&quot;
+    read -p &quot;(Default Username: teddysun):&quot; username
+    [ -z ${username} ] &amp;&amp; username=&quot;teddysun&quot;
+
+    password=`rand`
+    echo &quot;Please enter ${username}'s password:&quot;
+    read -p &quot;(Default Password: ${password}):&quot; tmppassword
+    [ ! -z ${tmppassword} ] &amp;&amp; password=${tmppassword}
+
+    echo
+    echo &quot;ServerIP:${IP}&quot;
+    echo &quot;Server Local IP:${iprange}.1&quot;
+    echo &quot;Client Remote IP Range:${iprange}.2-${iprange}.254&quot;
+    echo &quot;PSK:${mypsk}&quot;
+    echo
+    echo &quot;Press any key to start... or press Ctrl + C to cancel.&quot;
+    char=`get_char`
+
+}
+
+install_l2tp(){
+
+    mknod /dev/random c 1 9
+
+    if check_sys packageManager apt; then
+        apt-get -y update
+
+        if debianversion 7; then
+            if is_64bit; then
+                local libnspr4_filename1=&quot;libnspr4_4.10.7-1_amd64.deb&quot;
+                local libnspr4_filename2=&quot;libnspr4-0d_4.10.7-1_amd64.deb&quot;
+                local libnspr4_filename3=&quot;libnspr4-dev_4.10.7-1_amd64.deb&quot;
+                local libnspr4_filename4=&quot;libnspr4-dbg_4.10.7-1_amd64.deb&quot;
+                local libnss3_filename1=&quot;libnss3_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename2=&quot;libnss3-1d_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename3=&quot;libnss3-tools_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename4=&quot;libnss3-dev_3.17.2-1.1_amd64.deb&quot;
+                local libnss3_filename5=&quot;libnss3-dbg_3.17.2-1.1_amd64.deb&quot;
+            else
+                local libnspr4_filename1=&quot;libnspr4_4.10.7-1_i386.deb&quot;
+                local libnspr4_filename2=&quot;libnspr4-0d_4.10.7-1_i386.deb&quot;
+                local libnspr4_filename3=&quot;libnspr4-dev_4.10.7-1_i386.deb&quot;
+                local libnspr4_filename4=&quot;libnspr4-dbg_4.10.7-1_i386.deb&quot;
+                local libnss3_filename1=&quot;libnss3_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename2=&quot;libnss3-1d_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename3=&quot;libnss3-tools_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename4=&quot;libnss3-dev_3.17.2-1.1_i386.deb&quot;
+                local libnss3_filename5=&quot;libnss3-dbg_3.17.2-1.1_i386.deb&quot;
+            fi
+            rm -rf ${cur_dir}/l2tp
+            mkdir -p ${cur_dir}/l2tp
+            cd ${cur_dir}/l2tp
+            download_file &quot;${libnspr4_filename1}&quot;
+            download_file &quot;${libnspr4_filename2}&quot;
+            download_file &quot;${libnspr4_filename3}&quot;
+            download_file &quot;${libnspr4_filename4}&quot;
+            download_file &quot;${libnss3_filename1}&quot;
+            download_file &quot;${libnss3_filename2}&quot;
+            download_file &quot;${libnss3_filename3}&quot;
+            download_file &quot;${libnss3_filename4}&quot;
+            download_file &quot;${libnss3_filename5}&quot;
+            dpkg -i ${libnspr4_filename1} ${libnspr4_filename2} ${libnspr4_filename3} ${libnspr4_filename4}
+            dpkg -i ${libnss3_filename1} ${libnss3_filename2} ${libnss3_filename3} ${libnss3_filename4} ${libnss3_filename5}
+
+            apt-get -y install wget gcc ppp flex bison make pkg-config libpam0g-dev libcap-ng-dev iptables \
+                               libcap-ng-utils libunbound-dev libevent-dev libcurl4-nss-dev libsystemd-daemon-dev
+        else
+            apt-get -y install wget gcc ppp flex bison make python libnss3-dev libnss3-tools libselinux-dev iptables \
+                               libnspr4-dev pkg-config libpam0g-dev libcap-ng-dev libcap-ng-utils libunbound-dev \
+                               libevent-dev libcurl4-nss-dev libsystemd-dev
+        fi
+        apt-get -y --no-install-recommends install xmlto
+        apt-get -y install xl2tpd
+
+        compile_install
+    elif check_sys packageManager yum; then
+        echo &quot;Adding the EPEL repository...&quot;
+        yum -y install epel-release yum-utils
+        [ ! -f /etc/yum.repos.d/epel.repo ] &amp;&amp; echo &quot;Install EPEL repository failed, please check it.&quot; &amp;&amp; exit 1
+        yum-config-manager --enable epel
+        echo &quot;Adding the EPEL repository complete...&quot;
+
+        if centosversion 7; then
+            yum -y install ppp libreswan xl2tpd firewalld
+            yum_install
+        elif centosversion 6; then
+            yum -y remove libevent-devel
+            yum -y install libevent2-devel
+            yum -y install nss-devel nspr-devel pkgconfig pam-devel \
+                           libcap-ng-devel libselinux-devel lsof \
+                           curl-devel flex bison gcc ppp make iptables gmp-devel \
+                           fipscheck-devel unbound-devel xmlto libpcap-devel xl2tpd
+
+            compile_install
+        fi
+    fi
+
+}
+
+config_install(){
+
+    cat &gt; /etc/ipsec.conf&lt;&lt;EOF
+version 2.0
+
+config setup
+    protostack=netkey
+    nhelpers=0
+    uniqueids=no
+    interfaces=%defaultroute
+    virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!${iprange}.0/24
+
+conn l2tp-psk
+    rightsubnet=vhost:%priv
+    also=l2tp-psk-nonat
+
+conn l2tp-psk-nonat
+    authby=secret
+    pfs=no
+    auto=add
+    keyingtries=3
+    rekey=no
+    ikelifetime=8h
+    keylife=1h
+    type=transport
+    left=%defaultroute
+    leftid=${IP}
+    leftprotoport=17/1701
+    right=%any
+    rightprotoport=17/%any
+    dpddelay=40
+    dpdtimeout=130
+    dpdaction=clear
+    sha2-truncbug=yes
+EOF
+
+    cat &gt; /etc/ipsec.secrets&lt;&lt;EOF
+%any %any : PSK &quot;${mypsk}&quot;
+EOF
+
+    cat &gt; /etc/xl2tpd/xl2tpd.conf&lt;&lt;EOF
+[global]
+port = 1701
+
+[lns default]
+ip range = ${iprange}.2-${iprange}.254
+local ip = ${iprange}.1
+require chap = yes
+refuse pap = yes
+require authentication = yes
+name = l2tpd
+ppp debug = yes
+pppoptfile = /etc/ppp/options.xl2tpd
+length bit = yes
+EOF
+
+    cat &gt; /etc/ppp/options.xl2tpd&lt;&lt;EOF
+ipcp-accept-local
+ipcp-accept-remote
+require-mschap-v2
+ms-dns 8.8.8.8
+ms-dns 8.8.4.4
+noccp
+auth
+hide-password
+idle 1800
+mtu 1410
+mru 1410
+nodefaultroute
+debug
+proxyarp
+connect-delay 5000
+EOF
+
+    rm -f /etc/ppp/chap-secrets
+    cat &gt; /etc/ppp/chap-secrets&lt;&lt;EOF
+# Secrets for authentication using CHAP
+# client    server    secret    IP addresses
+${username}    l2tpd    ${password}       *
+EOF
+
+}
+
+compile_install(){
+
+    rm -rf ${cur_dir}/l2tp
+    mkdir -p ${cur_dir}/l2tp
+    cd ${cur_dir}/l2tp
+    download_file &quot;${libreswan_filename}.tar.gz&quot;
+    tar -zxf ${libreswan_filename}.tar.gz
+
+    cd ${cur_dir}/l2tp/${libreswan_filename}
+        cat &gt; Makefile.inc.local &lt;&lt;'EOF'
+WERROR_CFLAGS =
+USE_DNSSEC = false
+USE_DH31 = false
+USE_GLIBC_KERN_FLIP_HEADERS = true
+EOF
+    make programs &amp;&amp; make install
+
+    /usr/local/sbin/ipsec --version &gt;/dev/null 2&gt;&amp;1
+    if [ $? -ne 0 ]; then
+        echo &quot;${libreswan_filename} install failed.&quot;
+        exit 1
+    fi
+
+    config_install
+
+    cp -pf /etc/sysctl.conf /etc/sysctl.conf.bak
+
+    sed -i 's/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/g' /etc/sysctl.conf
+
+    for each in `ls /proc/sys/net/ipv4/conf/`; do
+        echo &quot;net.ipv4.conf.${each}.accept_source_route=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.accept_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.send_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.rp_filter=0&quot; &gt;&gt; /etc/sysctl.conf
+    done
+    sysctl -p
+
+    if centosversion 6; then
+        [ -f /etc/sysconfig/iptables ] &amp;&amp; cp -pf /etc/sysconfig/iptables /etc/sysconfig/iptables.old.`date +%Y%m%d`
+
+        if [ &quot;`iptables -L -n | grep -c '\-\-'`&quot; == &quot;0&quot; ]; then
+            cat &gt; /etc/sysconfig/iptables &lt;&lt;EOF
+# Added by L2TP VPN script
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+-A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s ${iprange}.0/24  -j ACCEPT
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+COMMIT
+EOF
+        else
+            iptables -I INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+            iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+            iptables -I FORWARD -s ${iprange}.0/24  -j ACCEPT
+            iptables -t nat -A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+            /etc/init.d/iptables save
+        fi
+
+        if [ ! -f /etc/ipsec.d/cert9.db ]; then
+           echo &gt; /var/tmp/libreswan-nss-pwd
+           certutil -N -f /var/tmp/libreswan-nss-pwd -d /etc/ipsec.d
+           rm -f /var/tmp/libreswan-nss-pwd
+        fi
+
+        chkconfig --add iptables
+        chkconfig iptables on
+        chkconfig --add ipsec
+        chkconfig ipsec on
+        chkconfig --add xl2tpd
+        chkconfig xl2tpd on
+
+        /etc/init.d/iptables restart
+        /etc/init.d/ipsec start
+        /etc/init.d/xl2tpd start
+
+    else
+        [ -f /etc/iptables.rules ] &amp;&amp; cp -pf /etc/iptables.rules /etc/iptables.rules.old.`date +%Y%m%d`
+
+        if [ &quot;`iptables -L -n | grep -c '\-\-'`&quot; == &quot;0&quot; ]; then
+            cat &gt; /etc/iptables.rules &lt;&lt;EOF
+# Added by L2TP VPN script
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+-A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s ${iprange}.0/24  -j ACCEPT
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+COMMIT
+EOF
+        else
+            iptables -I INPUT -p udp -m multiport --dports 500,4500,1701 -j ACCEPT
+            iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+            iptables -I FORWARD -s ${iprange}.0/24  -j ACCEPT
+            iptables -t nat -A POSTROUTING -s ${iprange}.0/24 -j SNAT --to-source ${IP}
+            /sbin/iptables-save &gt; /etc/iptables.rules
+        fi
+
+        cat &gt; /etc/network/if-up.d/iptables &lt;&lt;EOF
+#!/bin/sh
+/sbin/iptables-restore &lt; /etc/iptables.rules
+EOF
+        chmod +x /etc/network/if-up.d/iptables
+
+        if [ ! -f /etc/ipsec.d/cert9.db ]; then
+           echo &gt; /var/tmp/libreswan-nss-pwd
+           certutil -N -f /var/tmp/libreswan-nss-pwd -d /etc/ipsec.d
+           rm -f /var/tmp/libreswan-nss-pwd
+        fi
+
+        update-rc.d -f xl2tpd defaults
+
+        cp -f /etc/rc.local /etc/rc.local.old.`date +%Y%m%d`
+        sed --follow-symlinks -i -e '/^exit 0/d' /etc/rc.local
+        cat &gt;&gt; /etc/rc.local &lt;&lt;EOF
+
+# Added by L2TP VPN script
+echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+/usr/sbin/service ipsec start
+exit 0
+EOF
+        chmod +x /etc/rc.local
+        echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+
+        /sbin/iptables-restore &lt; /etc/iptables.rules
+        /usr/sbin/service ipsec start
+        /usr/sbin/service xl2tpd restart
+
+    fi
+
+}
+
+yum_install(){
+
+    config_install
+
+    cp -pf /etc/sysctl.conf /etc/sysctl.conf.bak
+
+    echo &quot;# Added by L2TP VPN&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.ip_forward=1&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.tcp_syncookies=1&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.icmp_echo_ignore_broadcasts=1&quot; &gt;&gt; /etc/sysctl.conf
+    echo &quot;net.ipv4.icmp_ignore_bogus_error_responses=1&quot; &gt;&gt; /etc/sysctl.conf
+
+    for each in `ls /proc/sys/net/ipv4/conf/`; do
+        echo &quot;net.ipv4.conf.${each}.accept_source_route=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.accept_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.send_redirects=0&quot; &gt;&gt; /etc/sysctl.conf
+        echo &quot;net.ipv4.conf.${each}.rp_filter=0&quot; &gt;&gt; /etc/sysctl.conf
+    done
+    sysctl -p
+
+    cat &gt; /etc/firewalld/services/xl2tpd.xml&lt;&lt;EOF
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;service&gt;
+  &lt;short&gt;xl2tpd&lt;/short&gt;
+  &lt;description&gt;L2TP IPSec&lt;/description&gt;
+  &lt;port protocol=&quot;udp&quot; port=&quot;4500&quot;/&gt;
+  &lt;port protocol=&quot;udp&quot; port=&quot;1701&quot;/&gt;
+&lt;/service&gt;
+EOF
+    chmod 640 /etc/firewalld/services/xl2tpd.xml
+
+    systemctl enable ipsec
+    systemctl enable xl2tpd
+    systemctl enable firewalld
+
+    systemctl status firewalld &gt; /dev/null 2&gt;&amp;1
+    if [ $? -eq 0 ]; then
+        firewall-cmd --reload
+        echo &quot;Checking firewalld status...&quot;
+        firewall-cmd --list-all
+        echo &quot;add firewalld rules...&quot;
+        firewall-cmd --permanent --add-service=ipsec
+        firewall-cmd --permanent --add-service=xl2tpd
+        firewall-cmd --permanent --add-masquerade
+        firewall-cmd --reload
+    else
+        echo &quot;Firewalld looks like not running, trying to start...&quot;
+        systemctl start firewalld
+        if [ $? -eq 0 ]; then
+            echo &quot;Firewalld start successfully...&quot;
+            firewall-cmd --reload
+            echo &quot;Checking firewalld status...&quot;
+            firewall-cmd --list-all
+            echo &quot;adding firewalld rules...&quot;
+            firewall-cmd --permanent --add-service=ipsec
+            firewall-cmd --permanent --add-service=xl2tpd
+            firewall-cmd --permanent --add-masquerade
+            firewall-cmd --reload
+        else
+            echo &quot;Failed to start firewalld. please enable udp port 500 4500 1701 manually if necessary.&quot;
+        fi
+    fi
+
+    systemctl restart ipsec
+    systemctl restart xl2tpd
+    echo &quot;Checking ipsec status...&quot;
+    systemctl -a | grep ipsec
+    echo &quot;Checking xl2tpd status...&quot;
+    systemctl -a | grep xl2tpd
+    echo &quot;Checking firewalld status...&quot;
+    firewall-cmd --list-all
+
+}
+
+finally(){
+
+    cd ${cur_dir}
+    rm -fr ${cur_dir}/l2tp
+    # create l2tp command
+    cp -f ${cur_dir}/`basename $0` /usr/bin/l2tp
+
+    echo &quot;Please wait a moment...&quot;
+    sleep 5
+    ipsec verify
+    echo
+    echo &quot;###############################################################&quot;
+    echo &quot;# L2TP VPN Auto Installer                                     #&quot;
+    echo &quot;# System Supported: CentOS 6+ / Debian 7+ / Ubuntu 12+        #&quot;
+    echo &quot;# Intro: https://teddysun.com/448.html                        #&quot;
+    echo &quot;# Author: Teddysun &lt;i@teddysun.com&gt;                           #&quot;
+    echo &quot;###############################################################&quot;
+    echo &quot;If there is no [FAILED] above, you can connect to your L2TP &quot;
+    echo &quot;VPN Server with the default Username/Password is below:&quot;
+    echo
+    echo &quot;Server IP: ${IP}&quot;
+    echo &quot;PSK      : ${mypsk}&quot;
+    echo &quot;Username : ${username}&quot;
+    echo &quot;Password : ${password}&quot;
+    echo
+    echo &quot;If you want to modify user settings, please use below command(s):&quot;
+    echo &quot;l2tp -a (Add a user)&quot;
+    echo &quot;l2tp -d (Delete a user)&quot;
+    echo &quot;l2tp -l (List all users)&quot;
+    echo &quot;l2tp -m (Modify a user password)&quot;
+    echo
+    echo &quot;Welcome to visit our website: https://teddysun.com/448.html&quot;
+    echo &quot;Enjoy it!&quot;
+    echo
+}
+
+
+l2tp(){
+    clear
+    echo
+    echo &quot;###############################################################&quot;
+    echo &quot;# L2TP VPN Auto Installer                                     #&quot;
+    echo &quot;# System Supported: CentOS 6+ / Debian 7+ / Ubuntu 12+        #&quot;
+    echo &quot;# Intro: https://teddysun.com/448.html                        #&quot;
+    echo &quot;# Author: Teddysun &lt;i@teddysun.com&gt;                           #&quot;
+    echo &quot;###############################################################&quot;
+    echo
+    rootness
+    tunavailable
+    disable_selinux
+    version_check
+    get_os_info
+    preinstall_l2tp
+    install_l2tp
+    finally
+}
+
+list_users(){
+    if [ ! -f /etc/ppp/chap-secrets ];then
+        echo &quot;Error: /etc/ppp/chap-secrets file not found.&quot;
+        exit 1
+    fi
+    local line=&quot;+-------------------------------------------+\n&quot;
+    local string=%20s
+    printf &quot;${line}|${string} |${string} |\n${line}&quot; Username Password
+    grep -v &quot;^#&quot; /etc/ppp/chap-secrets | awk '{printf &quot;|'${string}' |'${string}' |\n&quot;, $1,$3}'
+    printf ${line}
+}
+
+add_user(){
+    while :
+    do
+        read -p &quot;Please input your Username:&quot; user
+        if [ -z ${user} ]; then
+            echo &quot;Username can not be empty&quot;
+        else
+            grep -w &quot;${user}&quot; /etc/ppp/chap-secrets &gt; /dev/null 2&gt;&amp;1
+            if [ $? -eq 0 ];then
+                echo &quot;Username (${user}) already exists. Please re-enter your username.&quot;
+            else
+                break
+            fi
+        fi
+    done
+    pass=`rand`
+    echo &quot;Please input ${user}'s password:&quot;
+    read -p &quot;(Default Password: ${pass}):&quot; tmppass
+    [ ! -z ${tmppass} ] &amp;&amp; pass=${tmppass}
+    echo &quot;${user}    l2tpd    ${pass}       *&quot; &gt;&gt; /etc/ppp/chap-secrets
+    echo &quot;Username (${user}) add completed.&quot;
+}
+
+del_user(){
+    while :
+    do
+        read -p &quot;Please input Username you want to delete it:&quot; user
+        if [ -z ${user} ]; then
+            echo &quot;Username can not be empty&quot;
+        else
+            grep -w &quot;${user}&quot; /etc/ppp/chap-secrets &gt;/dev/null 2&gt;&amp;1
+            if [ $? -eq 0 ];then
+                break
+            else
+                echo &quot;Username (${user}) is not exists. Please re-enter your username.&quot;
+            fi
+        fi
+    done
+    sed -i &quot;/^\&lt;${user}\&gt;/d&quot; /etc/ppp/chap-secrets
+    echo &quot;Username (${user}) delete completed.&quot;
+}
+
+mod_user(){
+    while :
+    do
+        read -p &quot;Please input Username you want to change password:&quot; user
+        if [ -z ${user} ]; then
+            echo &quot;Username can not be empty&quot;
+        else
+            grep -w &quot;${user}&quot; /etc/ppp/chap-secrets &gt;/dev/null 2&gt;&amp;1
+            if [ $? -eq 0 ];then
+                break
+            else
+                echo &quot;Username (${user}) is not exists. Please re-enter your username.&quot;
+            fi
+        fi
+    done
+    pass=`rand`
+    echo &quot;Please input ${user}'s new password:&quot;
+    read -p &quot;(Default Password: ${pass}):&quot; tmppass
+    [ ! -z ${tmppass} ] &amp;&amp; pass=${tmppass}
+    sed -i &quot;/^\&lt;${user}\&gt;/d&quot; /etc/ppp/chap-secrets
+    echo &quot;${user}    l2tpd    ${pass}       *&quot; &gt;&gt; /etc/ppp/chap-secrets
+    echo &quot;Username ${user}'s password has been changed.&quot;
+}
+
+# Main process
+action=$1
+if [ -z ${action} ] &amp;&amp; [ &quot;`basename $0`&quot; != &quot;l2tp&quot; ]; then
+    action=install
+fi
+
+case ${action} in
+    install)
+        l2tp 2&gt;&amp;1 | tee ${cur_dir}/l2tp.log
+        ;;
+    -l|--list)
+        list_users
+        ;;
+    -a|--add)
+        add_user
+        ;;
+    -d|--del)
+        del_user
+        ;;
+    -m|--mod)
+        mod_user
+        ;;
+    -h|--help)
+        echo &quot;Usage: `basename $0` -l,--list   List all users&quot;
+        echo &quot;       `basename $0` -a,--add    Add a user&quot;
+        echo &quot;       `basename $0` -d,--del    Delete a user&quot;
+        echo &quot;       `basename $0` -m,--mod    Modify a user password&quot;
+        echo &quot;       `basename $0` -h,--help   Print this help information&quot;
+        ;;
+    *)
+        echo &quot;Usage: `basename $0` [-l,--list|-a,--add|-d,--del|-m,--mod|-h,--help]&quot; &amp;&amp; exit
+        ;;
+esac
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[内核升级]]></title>
         <id>https://orochw.github.io/post/nei-he-sheng-ji/</id>
@@ -1382,1033 +2324,6 @@ du [OPTION]... DIR
 <li>文件复制：</li>
 <li>文件移动：</li>
 </ul>
-</li>
-</ul>
-</li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[用户和组管理]]></title>
-        <id>https://orochw.github.io/post/yong-hu-he-zu-guan-li/</id>
-        <link href="https://orochw.github.io/post/yong-hu-he-zu-guan-li/">
-        </link>
-        <updated>2021-05-16T05:37:06.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="用户和组管理">用户和组管理</h2>
-<h3 id="1-资源分派">1. 资源分派：</h3>
-<ul>
-<li>
-<p>Authentication：认证</p>
-</li>
-<li>
-<p>Auhorization：授权</p>
-</li>
-<li>
-<p>Accouting：审计</p>
-<blockquote>
-<p>Audition</p>
-</blockquote>
-</li>
-<li>
-<p>token, identity(username/password)</p>
-</li>
-</ul>
-<h3 id="2-linux用户usernameuid">2. Linux用户：Username/UID</h3>
-<ul>
-<li>
-<p>管理员：root, 0</p>
-</li>
-<li>
-<p>普通用户：1-65535</p>
-</li>
-<li>
-<p>系统用户：1-499, 1-999</p>
-</li>
-<li>
-<p>对守护进程获取资源进行权限分配</p>
-<ul>
-<li>登录用户:500+, 1000+</li>
-</ul>
-</li>
-<li>
-<p>交互式登录</p>
-</li>
-</ul>
-<h3 id="3-linux组groupnamegid">3.     Linux组：Groupname/GID</h3>
-<ul>
-<li>管理员组：root, 0</li>
-<li>普通组：
-<ul>
-<li>系统组：1-499, 1-999</li>
-<li>普通组：500+, 1000+</li>
-</ul>
-</li>
-</ul>
-<h3 id="4-linux安全上下文">4. Linux安全上下文：</h3>
-<ul>
-<li>运行中的程序：进程 (process)
-<ul>
-<li>以进程发起者的身份运行：
-<ul>
-<li>root: cat</li>
-<li>tom: cat</li>
-</ul>
-<blockquote>
-<p>进程所能够访问的所有资源的权限取决于进程的发起者的身份；</p>
-</blockquote>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="5-linux组的类别">5. Linux组的类别：</h3>
-<ul>
-<li>用户的基本组(主组)：</li>
-<li>组名同用户名，且仅包含一个用户：私有组</li>
-<li>用户的附加组(额外组)：</li>
-</ul>
-<h3 id="6linux用户和组相关的配置文件">6.Linux用户和组相关的配置文件：</h3>
-<blockquote>
-<p>/etc/passwd：#用户及其属性信息(名称、UID、基本组ID等等)；</p>
-</blockquote>
-<blockquote>
-<p>/etc/group：组及其属性信息；</p>
-</blockquote>
-<blockquote>
-<p>/etc/shadow：用户密码及其相关属性；</p>
-</blockquote>
-<blockquote>
-<p>/etc/gshadow：组密码及其相关属性；</p>
-</blockquote>
-<ul>
-<li>/etc/passwd：
-<blockquote>
-<p>name:password:UID:GID:GECOS:directory:shell</p>
-</blockquote>
-</li>
-</ul>
-<blockquote>
-<p>用户名:密码<br>
-UID:GID:GECOS:主目录:默认shell</p>
-</blockquote>
-<ul>
-<li>
-<p>/etc/group：</p>
-<ul>
-<li>group_name:password:GID:user_list</li>
-</ul>
-</li>
-</ul>
-<blockquote>
-<p>组名:组密码:GID:以当前组为附加组的用户列表(分隔符为逗号)</p>
-</blockquote>
-<ul>
-<li>/etc/shadow</li>
-</ul>
-<blockquote>
-<p>用户名:加密了的密码:最近一次更改密码的日期:密码的最小使用期限:最大密码使用期限:密码警告时间段:密码禁用期:账户过期日期:保留字段</p>
-</blockquote>
-<ul>
-<li>
-<p>加密机制：</p>
-<ul>
-<li>
-<p>加密：明文--&gt; 密文</p>
-</li>
-<li>
-<p>解密：密文--&gt; 明文</p>
-</li>
-<li>
-<p>单向加密：提取数据指纹</p>
-<ul>
-<li>md5: message digest, 128bits</li>
-<li>sha1: secure hash algorithm, 160bits</li>
-<li>sha224: 224bits</li>
-<li>sha256: 256bits</li>
-<li>sha384: 384bits</li>
-<li>sha512: 512bits</li>
-</ul>
-<blockquote>
-<p>雪崩效应：初始的条件的微小改变，将会引起结果的巨大改变；</p>
-</blockquote>
-<blockquote>
-<p>定长输出：</p>
-</blockquote>
-</li>
-</ul>
-</li>
-<li>
-<p>密码的复杂性策略：</p>
-<ul>
-<li>使用数字、大写字母、小写字母及特殊字符中至少3种；</li>
-<li>足够长；</li>
-<li>使用随机密码；</li>
-<li>定期更换；不要使用最近曾经使用过的密码；</li>
-</ul>
-</li>
-</ul>
-<h3 id="7用户和组相关的管理命令">7.用户和组相关的管理命令：</h3>
-<h4 id="用户创建useradd">用户创建：useradd</h4>
-<pre><code>useradd [options] LOGIN
-	-u UID: [UID_MIN, UID_MAX], 定义在/etc/login.defs
-	-g GID：指明用户所属基本组，可为组名，也可以GID；
-	-c &quot;COMMENT&quot;：用户的注释信息；
-	-d /PATH/TO/HOME_DIR: 以指定的路径为家目录；
-	-s SHELL: 指明用户的默认shell程序，可用列表在/etc/shells文件中；
-	-G GROUP1[,GROUP2,...[,GROUPN]]]：为用户指明附加组；组必须事先存在；
-	-r: 创建系统用户
-</code></pre>
-<blockquote>
-<p>CentOS 6: ID&lt;500</p>
-</blockquote>
-<blockquote>
-<p>CentOS 7: ID&lt;1000</p>
-</blockquote>
-<pre><code>默认值设定：/etc/default/useradd文件中
-	useradd -D 
-		-s SHELL
-</code></pre>
-<h4 id="组创建groupadd">组创建：groupadd</h4>
-<pre><code>groupadd [OPTION]... group_name
-
-	-g GID: 指明GID号；[GID_MIN, GID_MAX]
-	-r: 创建系统组；
-		CentOS 6: ID&lt;500
-		CentOS 7: ID&lt;1000
-</code></pre>
-<h4 id="查看用户相关的id信息id">查看用户相关的ID信息：id</h4>
-<pre><code>id [OPTION]... [USER]
-	-u: UID
-	-g: GID
-	-G: Groups
-	-n: Name
-</code></pre>
-<h4 id="切换用户或以其他用户身份执行命令su">切换用户或以其他用户身份执行命令：su</h4>
-<pre><code>su [options...] [-] [user [args...]]
-
-	切换用户的方式：
-		su UserName：非登录式切换，即不会读取目标用户的配置文件；
-		su - UserName：登录式切换，会读取目标用户的配置文件；完全切换；
-
-		Note：root su至其他用户无须密码；非root用户切换时需要密码；
-
-	换个身份执行命令：
-		su [-] UserName -c 'COMMAND'
-
-	选项：
-		-l：“su -l UserName”相当于“su - UserName”
-</code></pre>
-<h3 id="8用户属性修改usermod">8.用户属性修改：usermod</h3>
-<pre><code>usermod [OPTION] login
-
-	-u UID: 新UID
-	-g GID: 新基本组
-	-G GROUP1[,GROUP2,...[,GROUPN]]]：新附加组，原来的附加组将会被覆盖；若保留原有，则要同时使用-a选项，表示append；
-	-s SHELL：新的默认SHELL；
-	-c 'COMMENT'：新的注释信息；
-	-d HOME: 新的家目录；原有家目录中的文件不会同时移动至新的家目录；若要移动，则同时使用-m选项；
-	-l login_name: 新的名字；
-
-	-L: lock指定用户
-	-U: unlock指定用户
-
-	-e YYYY-MM-DD: 指明用户账号过期日期；
-	-f INACTIVE: 设定非活动期限；
-</code></pre>
-<h3 id="给用户添加密码passwd">给用户添加密码：passwd</h3>
-<pre><code>passwd [OPTIONS] UserName: 修改指定用户的密码，仅root用户权限
-passwd: 修改自己的密码；
-
-常用选项：
-	-l: 锁定指定用户
-	-u: 解锁指定用户
-	-n mindays: 指定最短使用期限
-	-x maxdays：最大使用期限
-	-w warndays：提前多少天开始警告
-	-i inactivedays：非活动期限；
-
-	--stdin：从标准输入接收用户密码；
-		echo &quot;PASSWORD&quot; | passwd --stdin USERNAME
-
-		Note: /dev/null, bit buckets
-		      /dev/zero, 
-</code></pre>
-<h3 id="删除用户userdel">删除用户：userdel</h3>
-<pre><code>userdel [OPTION]... login
-	-r: 删除用户家目录；
-</code></pre>
-<h3 id="组属性修改groupmod">组属性修改：groupmod</h3>
-<pre><code>groupmod [OPTION]... group
-	-n group_name: 新名字
-	-g GID: 新的GID；
-</code></pre>
-<h3 id="组删除groupdel">组删除：groupdel</h3>
-<pre><code>groupdel GROUP
-</code></pre>
-<h3 id="组密码gpasswd">组密码：gpasswd</h3>
-<pre><code>gpasswd [OPTION] GROUP
-	-a user: 将user添加至指定组中；
-	-d user: 删除用户user的以当前组为组名的附加组
-	-A user1,user2,...: 设置有管理权限的用户列表
-	newgrp命令：临时切换基本组；
-</code></pre>
-<blockquote>
-<p>如果用户本不属于此组，则需要组密码；</p>
-</blockquote>
-<h3 id="修改用户属性chage">修改用户属性：chage</h3>
-<pre><code>chage [OPTION]... LOGIN
-	-d LAST_DAY
-	-E, --expiredate EXPIRE_DATE
-	-I, --inactive INACTIVE
-	-m, --mindays MIN_DAYS
-	-M, --maxdays MAX_DAYS
-	-W, --warndays WARN_DAYS
-</code></pre>
-<blockquote>
-<p>其它命令：chfn, chsh, finger</p>
-</blockquote>
-<blockquote>
-<p>命令总结：useradd, groupadd, su, id, usermod, userdel, groupmod, groupdel, passwd, newgrp, pwck, gpasswd, chage, chsh, chfn, finger</p>
-</blockquote>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Linux程序包管理]]></title>
-        <id>https://orochw.github.io/post/linux-cheng-xu-bao-guan-li/</id>
-        <link href="https://orochw.github.io/post/linux-cheng-xu-bao-guan-li/">
-        </link>
-        <updated>2021-05-16T05:36:34.000Z</updated>
-        <content type="html"><![CDATA[<h1 id="linux程序包管理">Linux程序包管理</h1>
-<ul>
-<li>
-<p>API：Application Programming Interface</p>
-</li>
-<li>
-<p>POSIX：Portable OS</p>
-<p>程序源代码 --&gt; 预处理 --&gt; 编译 --&gt; 汇编 --&gt; 链接</p>
-<p>静态编译：</p>
-<p>共享编译：.so</p>
-</li>
-<li>
-<p>ABI：Application Binary Interface</p>
-<blockquote>
-<p>Windows与Linux不兼容</p>
-</blockquote>
-<ul>
-<li>库级别的虚拟化：</li>
-<li>Linux: WINE</li>
-<li>Windows: Cywin</li>
-</ul>
-</li>
-<li>
-<p>系统级开发<br>
-+ C<br>
-+ C++</p>
-</li>
-<li>
-<p>应用级开发<br>
-+ java<br>
-+ Python<br>
-+ php<br>
-+ perl<br>
-+ ruby</p>
-</li>
-<li>
-<p>二进制应用程序的组成部分：</p>
-<blockquote>
-<p>二进制文件、库文件、配置文件、帮助文件</p>
-</blockquote>
-<ul>
-<li>程序包管理器：
-<ul>
-<li>debian：deb, dpt</li>
-<li>redhat: rpm, rpm
-<ul>
-<li>rpm: Redhat Package Manager</li>
-<li>RPM is Package Manager<br>
-+ Gentoo<br>
-+ Archlinux</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>源代码：name-VERSION.tar.gz</p>
-<blockquote>
-<p>VERSION: major.minor.release</p>
-</blockquote>
-</li>
-<li>
-<p>rpm包命名方式：</p>
-<blockquote>
-<p>name-VERSION-release.arch.rpm</p>
-</blockquote>
-<ul>
-<li>
-<p>VERSION: major.minor.release</p>
-</li>
-<li>
-<p>release.arch：</p>
-<ul>
-<li>release：release.OS</li>
-</ul>
-</li>
-<li>
-<p>zlib-1.2.7-13.el7.i686.rpm</p>
-</li>
-<li>
-<p>常见的arch：</p>
-<ul>
-<li>x86: i386, i486, i586, i686</li>
-<li>x86_64: x64, x86_64, amd64</li>
-<li>powerpc: ppc</li>
-<li>跟平台无关：noarch</li>
-</ul>
-</li>
-<li>
-<p>testapp: 拆包</p>
-</li>
-<li>
-<p>testapp-VERSION-ARCH.rpm: 主包</p>
-</li>
-<li>
-<p>testapp-devel-VERSION-ARCH.rpm：支包</p>
-</li>
-<li>
-<p>testapp-testing-VERSION-ARHC.rpm</p>
-</li>
-<li>
-<p>包之间：存在依赖关系<br>
-X, Y, Z</p>
-<p>yum：rpm包管理器的前端工具；</p>
-<p>apt-get：deb包管理器前端工具;</p>
-<p>zypper: suse上的rpm前端管理工具；</p>
-<p>dnf: Fedora 22+ rpm包管理器前端管理工具；</p>
-</li>
-</ul>
-</li>
-<li>
-<p>查看二进制程序所依赖的库文件：</p>
-<pre><code>ldd /PATH/TO/BINARY_FILE
-</code></pre>
-</li>
-<li>
-<p>管理及查看本机装载的库文件：</p>
-<pre><code>ldconfig
-	/sbin/ldconfig -p: 显示本机已经缓存的所有可用库文件名及文件路径映射关系；
-		配置文件为：/etc/ld.so.conf, /etc/ld.so.conf.d/*.conf
-		缓存文件：/etc/ld.so.cache
-</code></pre>
-</li>
-<li>
-<p>程序包管理：</p>
-<blockquote>
-<p>功能：将编译好的应用程序的各组成文件打包一个或几个程序包文件，从而方便快捷地实现程序包的安装、卸载、查询、升级和校验等管理操作；</p>
-</blockquote>
-<ul>
-<li>1.成组成清单 (每个包独有)
-<ul>
-<li>文件清单</li>
-<li>安装或卸载时运行的脚本</li>
-</ul>
-</li>
-<li>2.数据库(公共)
-<ul>
-<li>程序包名称及版本</li>
-<li>依赖关系；</li>
-<li>功能说明；</li>
-<li>安装生成的各文件的文件路径及校验码信息；</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>管理程序包的方式：</p>
-<ul>
-<li>使用包管理器：rpm</li>
-<li>使用前端工具：yum, dnf</li>
-</ul>
-</li>
-<li>
-<p>获取程序包的途径：</p>
-<ul>
-<li>系统发版的光盘或官方的服务器；
-<ul>
-<li>CentOS镜像：</li>
-</ul>
-<pre><code>  http://mirrors.aliyun.com
-  http://mirrors.sohu.com
-  http://mirrors.163.com
-</code></pre>
-</li>
-<li>项目官方站点</li>
-<li>第三方组织：
-<ul>
-<li>Fedora-EPEL</li>
-<li>搜索引擎：</li>
-</ul>
-<pre><code>http://pkgs.org
-http://rpmfind.net
-http://rpm.pbone.net
-</code></pre>
-</li>
-<li>自己制作</li>
-<li>建议：
-<ul>
-<li>检查其合法性</li>
-<li>来源合法性；</li>
-<li>程序包的完整性；</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="centos系统上rpm命令管理程序包">CentOS系统上rpm命令管理程序包：</h2>
-<blockquote>
-<p>安装、卸载、升级、查询、校验、数据库维护</p>
-</blockquote>
-<ul>
-<li>
-<p>安装：</p>
-<ul>
-<li>语法：<code>rpm {-i|--install} [install-options] PACKAGE_FILE ...</code><pre><code> -v: verbose
-	  	-vv: 
-	  	-h: 以#显示程序包管理执行进度；每个#表示2%的进度
-</code></pre>
-</li>
-<li>常见用法：<code>rpm -ivh PACKAGE_FILE ...</code></li>
-</ul>
-<pre><code>[install-options]
---test: 测试安装，但不真正执行安装过程；dry run模式；
---nodeps：忽略依赖关系；
---replacepkgs: 重新安装；
-
---nosignature: 不检查来源合法性；
---nodigest：不检查包完整性；
-
---noscipts：不执行程序包脚本片断；
-    %pre: 安装前脚本； --nopre
-    %post: 安装后脚本； --nopost
-    %preun: 卸载前脚本； --nopreun
-    %postun: 卸载后脚本；  --nopostun
-</code></pre>
-</li>
-<li>
-<p>升级：</p>
-<ul>
-<li>语法：</li>
-</ul>
-<pre><code>rpm {-U|--upgrade} [install-options] PACKAGE_FILE ...
-rpm {-F|--freshen} [install-options] PACKAGE_FILE ...
-</code></pre>
-<ul>
-<li>常见用法</li>
-</ul>
-<pre><code>  upgrage：安装有旧版程序包，则“升级”；如果不存在旧版程序包，则“安装”;
-  freeshen：安装有旧版程序包，则“升级”；如果不存在旧版程序包，则不执行升级操作；
-  
-  rpm -Uvh PACKAGE_FILE ...
-  rpm -Fvh PACKAGE_FILE ...
-  
-  --oldpackage：降级；
-  --force: 强行升级；
-</code></pre>
-</li>
-</ul>
-<blockquote>
-<p>tips：</p>
-</blockquote>
-<blockquote>
-<blockquote>
-<p>不要对内核做升级操作；Linux支持多内核版本并存，因此，对直接安装新版本内核；</p>
-</blockquote>
-</blockquote>
-<blockquote>
-<blockquote>
-<p>如果原程序包的配置文件安装后曾被修改，长级时，新版本的提供的同一个配置文件并不会直接覆盖老版本的配置文件，而把新版本的文件重命名(FILENAME.rpmnew)后保留；</p>
-</blockquote>
-</blockquote>
-<ul>
-<li>
-<p>查询：<code>rpm {-q|--query} [select-options] [query-options]</code></p>
-<ul>
-<li>常见用法</li>
-</ul>
-<pre><code>[select-options]
--a: 所有包
--f: 查看指定的文件由哪个程序包安装生成
--p /PATH/TO/PACKAGE_FILE：针对尚未安装的程序包文件做查询操作；
-
---whatprovides CAPABILITY：查询指定的CAPABILITY由哪个包所提供；
---whatrequires CAPABILITY：查询指定的CAPABILITY被哪个包所依赖；
-
-[query-options]
-  --changelog：查询rpm包的changlog
-  -c: 查询程序的配置文件
-  -d: 查询程序的文档
-  -i: information
-  -l: 查看指定的程序包安装后生成的所有文件；
-  --scripts：程序包自带的脚本片断
-  -R: 查询指定的程序包所依赖的CAPABILITY；
-  --provides: 列出指定程序包所提供的CAPABILITY；
-
-常见
-  -qi PACKAGE, -qf FILE, -qc PACKAGE, -ql PACKAGE, -qd PACKAGE
-  -qpi PACKAGE_FILE, -qpl PACKAGE_FILE, ...
-  -qa
-</code></pre>
-</li>
-<li>
-<p>卸载：语法：<code>rpm {-e|--erase} [--allmatches] [--nodeps] [--noscripts] [--notriggers] [--test] PACKAGE_NAME ...</code></p>
-</li>
-<li>
-<p>校验：<br>
-语法：<code>rpm {-V|--verify} [select-options] [verify-options]</code></p>
-</li>
-</ul>
-<pre><code>S file Size differs
-M Mode differs (includes permissions and file type)
-5 digest (formerly MD5 sum) differs
-D Device major/minor number mismatch
-L readLink(2) path mismatch
-U User ownership differs
-G Group ownership differs
-T mTime differs
-P caPabilities differ
-</code></pre>
-<ul>
-<li>
-<p>包来源合法性验正及完整性验正：</p>
-<ul>
-<li>完整性验正：SHA256</li>
-<li>来源合法性验正：RSA</li>
-<li>公钥加密：
-<ul>
-<li>对称加密：加密、解密使用同一密钥；</li>
-<li>非对称加密：密钥是成对儿的，
-<ul>
-<li>public key: 公钥，公开所有人</li>
-<li>secret key: 私钥, 不能公开</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>导入所需要公钥：</li>
-</ul>
-<pre><code>  rpm --import /PATH/FROM/GPG-PUBKEY-FILE
-</code></pre>
-<p>CentOS 7发行版光盘提供的密钥文件：RPM-GPG-KEY-CentOS-7</p>
-</li>
-<li>
-<p>数据库重建：</p>
-<pre><code>rpm {--initdb|--rebuilddb}
-</code></pre>
-<ul>
-<li>initdb: 初始化<br>
-如果事先不存在数据库，则新建之；否则，不执行任何操作；</li>
-<li>rebuilddb：重建<br>
-无论当前存在与否，直接重新创建数据库；</li>
-</ul>
-</li>
-</ul>
-<h2 id="linux程序包管理2">Linux程序包管理(2)</h2>
-<ul>
-<li>
-<p>CentOS: yum, dnf</p>
-</li>
-<li>
-<p>URL: ftp://172.16.0.1/pub/</p>
-</li>
-<li>
-<p>YUM: yellow dog, Yellowdog Update Modifier</p>
-</li>
-<li>
-<p>yum repository: yum repo<br>
-存储了众多rpm包，以及包的相关的元数据文件（放置于特定目录下：repodata）；<br>
-文件服务器：</p>
-<pre><code>ftp://
-http://
-nfs://
-file:///
-</code></pre>
-</li>
-<li>
-<p>yum客户端：</p>
-<ul>
-<li>
-<p>配置文件：</p>
-<pre><code>/etc/yum.conf：为所有仓库提供公共配置
-/etc/yum.repos.d/*.repo：为仓库的指向提供配置
-</code></pre>
-</li>
-<li>
-<p>仓库指向的定义：</p>
-<pre><code>[repositoryID]
-name=Some name for this repository
-baseurl=url://path/to/repository/
-enabled={1|0}
-gpgcheck={1|0}
-gpgkey=URL
-enablegroups={1|0}
-failovermethod={roundrobin|priority}
-  默认为：roundrobin，意为随机挑选；
-Cost=
-  默认为1000
-</code></pre>
-</li>
-</ul>
-</li>
-<li>
-<p>yum命令的用法：<code>yum [options] [command] [package ...]</code></p>
-<pre><code>List of Commands:
-  check          检查 RPM 数据库问题
-  check-update   检查是否有可用的软件包更新
-  clean          删除缓存数据
-  deplist        列出软件包的依赖关系
-  distribution-synchronization 已同步软件包到最新可用版本
-  downgrade      降级软件包
-  erase          从系统中移除一个或多个软件包
-  fs             Acts on the filesystem data of the host, mainly for removing docs/lanuages for minimal hosts.
-  fssnapshot     Creates filesystem snapshots, or lists/deletes current snapshots.
-  groups         显示或使用、组信息
-  history        显示或使用事务历史
-  info           显示关于软件包或组的详细信息
-  install        向系统中安装一个或多个软件包
-  list           列出一个或一组软件包
-  load-transaction 从文件名中加载一个已存事务
-  makecache      创建元数据缓存
-  provides       查找提供指定内容的软件包
-  reinstall      覆盖安装软件包
-  repo-pkgs      将一个源当作一个软件包组，这样我们就可以一次性安装/移除全部软件包。
-  repolist       显示已配置的源
-  search         在软件包详细信息中搜索指定字符串
-  shell          运行交互式的 yum shell
-  swap           Simple way to swap packages, instead of using shell
-  update         更新系统中的一个或多个软件包
-  update-minimal Works like upgrade, but goes to the 'newest' package match which fixes a problem that affects your system
-  updateinfo     Acts on repository update information
-  upgrade        更新软件包同时考虑软件包取代关系
-  version        显示机器和/或可用的源版本。
-  Options:
-    -h, --help            显示此帮助消息并退出
-    -t, --tolerant        忽略错误
-    -C, --cacheonly       完全从系统缓存运行，不升级缓存
-    -c [config file], --config=[config file]    
-                          配置文件路径
-    -R [minutes], --randomwait=[minutes]	      
-                          命令最长等待时间
-    -d [debug level], --debuglevel=[debug level]
-  		                      调试输出级别
-    --showduplicates      在 list/search 命令下，显示源里重复的条目
-    -e [error level], --errorlevel=[error level]
-                          错误输出级别
-    --rpmverbosity=[debug level name]
-                          RPM 调试输出级别
-    -q, --quiet           静默执行
-    -v, --verbose         详尽的操作过程
-    -y, --assumeyes       回答全部问题为是
-    --assumeno            回答全部问题为否
-    --version             显示 Yum 版本然后退出
-    --installroot=[path]  设置安装根目录
-    --enablerepo=[repo]   启用一个或多个软件源(支持通配符)
-    --disablerepo=[repo]  禁用一个或多个软件源(支持通配符)
-    -x [package], --exclude=[package]
-                          采用全名或通配符排除软件包
-    --disableexcludes=[repo]
-                          禁止从主配置，从源或者从任何位置排除
-    --disableincludes=[repo]
-                          disable includepkgs for a repo or for everything
-    --obsoletes           更新时处理软件包取代关系
-    --noplugins           禁用 Yum 插件
-    --nogpgcheck          禁用 GPG 签名检查
-    --disableplugin=[plugin]
-                          禁用指定名称的插件
-    --enableplugin=[plugin]
-                          启用指定名称的插件
-    --skip-broken         忽略存在依赖关系问题的软件包
-    --color=COLOR         配置是否使用颜色
-    --releasever=RELEASEVER
-                          在 yum 配置和 repo 文件里设置 $releasever 的值
-    --downloadonly        仅下载而不更新
-    --downloaddir=DLDIR   指定一个其他文件夹用于保存软件包
-    --setopt=SETOPTS      设置任意配置和源选项
-    --bugfix              Include bugfix relevant packages, in updates
-    --security            Include security relevant packages, in updates
-    --advisory=ADVS, --advisories=ADVS
-                          Include packages needed to fix the given advisory, in
-                          updates
-    --bzs=BZS             Include packages needed to fix the given BZ, in
-                          updates
-    --cves=CVES           Include packages needed to fix the given CVE, in
-                          updates
-    --sec-severity=SEVS, --secseverity=SEVS
-                          Include security relevant packages matching the
-                          severity, in updates
-</code></pre>
-</li>
-<li>
-<p>显示仓库列表：</p>
-<pre><code>repolist [all|enabled|disabled]
-</code></pre>
-</li>
-<li>
-<p>显示程序包：</p>
-<pre><code>list
-# yum list [all | glob_exp1] [glob_exp2] [...]
-# yum list {available|installed|updates} [glob_exp1] [...]
-</code></pre>
-</li>
-<li>
-<p>安装程序包：</p>
-<pre><code>install package1 [package2] [...]
-reinstall package1 [package2] [...]  (重新安装)
-</code></pre>
-</li>
-<li>
-<p>升级程序包：</p>
-<pre><code>update [package1] [package2] [...]
-downgrade package1 [package2] [...] (降级)
-</code></pre>
-</li>
-<li>
-<p>检查可用升级：</p>
-<pre><code>check-update
-</code></pre>
-</li>
-<li>
-<p>卸载程序包：</p>
-<pre><code>remove | erase package1 [package2] [...]
-</code></pre>
-</li>
-<li>
-<p>查看程序包information：</p>
-<pre><code>info [...]
-</code></pre>
-</li>
-<li>
-<p>查看指定的特性(可以是某文件)是由哪个程序包所提供：</p>
-<pre><code>provides | whatprovides feature1 [feature2] [...]
-</code></pre>
-</li>
-<li>
-<p>清理本地缓存：</p>
-<pre><code>clean [ packages | metadata | expire-cache | rpmdb | plugins | all ]
-</code></pre>
-</li>
-<li>
-<p>构建缓存：</p>
-<pre><code>makecache
-</code></pre>
-</li>
-<li>
-<p>搜索：</p>
-<pre><code>search string1 [string2] [...]
-</code></pre>
-<p>以指定的关键字搜索程序包名及summary信息；</p>
-</li>
-<li>
-<p>查看指定包所依赖的capabilities：</p>
-<pre><code>deplist package1 [package2] [...]
-</code></pre>
-</li>
-<li>
-<p>查看yum事务历史：</p>
-<pre><code>history [info|list|packages-list|packages-info|summary|addon-info|redo|undo|rollback|new|sync|stats]
-</code></pre>
-</li>
-<li>
-<p>安装及升级本地程序包：</p>
-<pre><code>* localinstall rpmfile1 [rpmfile2] [...]
-    (maintained for legacy reasons only - use install)
-* localupdate rpmfile1 [rpmfile2] [...]
-    (maintained for legacy reasons only - use update)
-</code></pre>
-</li>
-<li>
-<p>包组管理的相关命令：</p>
-<pre><code>* groupinstall group1 [group2] [...]
-* groupupdate group1 [group2] [...]
-* grouplist [hidden] [groupwildcard] [...]
-* groupremove group1 [group2] [...]
-* groupinfo group1 [...]
-</code></pre>
-</li>
-<li>
-<p>如何使用光盘当作本地yum仓库：</p>
-<pre><code>(1) 挂载光盘至某目录，例如/media/cdrom
-# mount -r -t iso9660 /dev/cdrom /media/cdrom
-(2) 创建配置文件
-[CentOS7]
-name=
-baseurl=
-gpgcheck=
-enabled=
-</code></pre>
-</li>
-<li>
-<p>yum的命令行选项：</p>
-<pre><code>--nogpgcheck：禁止进行gpg check；
--y: 自动回答为“yes”；
--q：静默模式；
---disablerepo=repoidglob：临时禁用此处指定的repo；
---enablerepo=repoidglob：临时启用此处指定的repo；
---noplugins：禁用所有插件；
-</code></pre>
-</li>
-<li>
-<p>yum的repo配置文件中可用的变量：</p>
-<pre><code>$releasever: 当前OS的发行版的主版本号；
-$arch: 平台；
-$basearch：基础平台；
-$YUM0-$YUM9
-
-http://mirrors.magedu.com/centos/$releasever/$basearch/os
-</code></pre>
-</li>
-<li>
-<p>创建yum仓库：</p>
-<pre><code>createrepo [options] &lt;directory&gt;
-</code></pre>
-</li>
-<li>
-<p>程序包编译安装：</p>
-</li>
-</ul>
-<blockquote>
-<p>testapp-VERSION-release.src.rpm --&gt; 安装后，使用rpmbuild命令制作成二进制格式的rpm包，而后再安装；</p>
-</blockquote>
-<blockquote>
-<p>源代码 --&gt; 预处理 --&gt; 编译(gcc) --&gt; 汇编 --&gt; 链接 --&gt; 执行</p>
-</blockquote>
-<ul>
-<li>源代码组织格式：
-<ul>
-<li>
-<p>多文件：文件中的代码之间，很可能存在跨文件依赖关系；</p>
-</li>
-<li>
-<p>C、C++： make (configure --&gt; Makefile.in --&gt; makefile)</p>
-<blockquote>
-<p>java: maven</p>
-</blockquote>
-</li>
-<li>
-<p>C代码编译安装三步骤：</p>
-<ul>
-<li>./configure：</li>
-</ul>
-<p>通过选项传递参数，指定启用特性、安装路径等；执行时会参考用户的指定以及Makefile.in文件生成makefile；</p>
-<p>检查依赖到的外部环境；</p>
-<ul>
-<li>make：</li>
-</ul>
-<p>根据makefile文件，构建应用程序；</p>
-<ul>
-<li>make install</li>
-</ul>
-</li>
-<li>
-<p>开发工具：</p>
-<pre><code>autoconf: 生成configure脚本
-automake：生成Makefile.in
-</code></pre>
-<p><strong>建议：安装前查看INSTALL，README</strong></p>
-</li>
-</ul>
-</li>
-<li>开源程序源代码的获取：
-<ul>
-<li>官方自建站点：
-<ul>
-<li>apache.org (ASF)</li>
-<li>mariadb.org</li>
-<li>...</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>代码托管：
-<ul>
-<li>SourceForge</li>
-<li>Github.com</li>
-<li>code.google.com</li>
-</ul>
-</li>
-<li>编译C源代码：c/c++: gcc (GNU C Complier)
-<ul>
-<li>
-<p>前提：提供开发工具及开发环境</p>
-<ul>
-<li>开发工具：make, gcc等</li>
-<li>开发环境：开发库，头文件</li>
-</ul>
-<p>glibc：标准库</p>
-<ul>
-<li>通过“包组”提供开发组件</li>
-</ul>
-<p>CentOS 6: &quot;Development Tools&quot;, &quot;Server Platform Development&quot;,</p>
-</li>
-<li>
-<p>第一步：configure脚本</p>
-<blockquote>
-<p>选项：指定安装位置、指定启用的特性</p>
-</blockquote>
-<blockquote>
-<p>--help: 获取其支持使用的选项</p>
-</blockquote>
-<ul>
-<li>选项分类：</li>
-</ul>
-<pre><code>安装路径设定：
---prefix=/PATH/TO/SOMEWHERE: 指定默认安装位置；默认为/usr/local/
---sysconfdir=/PATH/TO/SOMEWHERE：配置文件安装位置；
-
-System types:
-
-Optional Features: 可选特性
---disable-FEATURE
---enable-FEATURE[=ARG]
-
-Optional Packages: 可选包
---with-PACKAGE[=ARG]
---without-PACKAGE
-</code></pre>
-</li>
-<li>
-<p>第二步：make</p>
-</li>
-<li>
-<p>第三步：make install</p>
-</li>
-</ul>
-</li>
-<li>安装后的配置：
-<ul>
-<li>
-<p>(1) 导出二进制程序目录至PATH环境变量中；</p>
-<p>编辑文件<code>/etc/profile.d/NAME.sh</code></p>
-<pre><code>export PATH=/PATH/TO/BIN:$PATH
-</code></pre>
-</li>
-<li>
-<p>(2) 导出库文件路径</p>
-<p>编辑<code>/etc/ld.so.conf.d/NAME.conf</code></p>
-<p>添加新的库文件所在目录至此文件中；</p>
-<p>让系统重新生成缓存：</p>
-<pre><code>ldconfig [-v]
-</code></pre>
-</li>
-<li>
-<p>(3) 导出头文件</p>
-<p>基于链接的方式实现：</p>
-<pre><code>ln -sv 
-</code></pre>
-</li>
-<li>
-<p>(4) 导出帮助手册</p>
-<p>编辑/etc/man.config文件</p>
-<p>添加一个MANPATH</p>
 </li>
 </ul>
 </li>
