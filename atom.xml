@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://orochw.github.io</id>
     <title>Gridea</title>
-    <updated>2021-05-17T07:36:36.619Z</updated>
+    <updated>2021-05-17T07:57:40.430Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://orochw.github.io"/>
     <link rel="self" href="https://orochw.github.io/atom.xml"/>
@@ -10,6 +10,17 @@
     <logo>https://orochw.github.io/images/avatar.png</logo>
     <icon>https://orochw.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[jenkins war包起服务]]></title>
+        <id>https://orochw.github.io/post/jenkins-war-bao-qi-fu-wu/</id>
+        <link href="https://orochw.github.io/post/jenkins-war-bao-qi-fu-wu/">
+        </link>
+        <updated>2021-05-17T07:55:51.000Z</updated>
+        <content type="html"><![CDATA[<p>需要JDK</p>
+<pre><code>/opt/jdk1.8.0_201/bin/java  -jar /data/jenkins.war &gt;/tmp/jenkins.out 2&gt;&amp;1
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[nginx一键编译脚本]]></title>
         <id>https://orochw.github.io/post/nginx-yi-jian-bian-yi-jiao-ben/</id>
@@ -1788,115 +1799,6 @@ REGEXP：由一类特殊字符及文本字符所编写的模式，其中有些�
 </li>
 </ol>
 </section>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[权限管理：]]></title>
-        <id>https://orochw.github.io/post/quan-xian-guan-li/</id>
-        <link href="https://orochw.github.io/post/quan-xian-guan-li/">
-        </link>
-        <updated>2021-05-16T05:38:27.000Z</updated>
-        <content type="html"><![CDATA[<h3 id="文件的权限主要针对三类对象进行定义">文件的权限主要针对三类对象进行定义：</h3>
-<blockquote>
-<p>owner : 属主, u</p>
-</blockquote>
-<blockquote>
-<p>group : 属组, g</p>
-</blockquote>
-<blockquote>
-<p>other : 其他, o</p>
-</blockquote>
-<h3 id="每个文件针对每类访问者都定义了三种权限">每个文件针对每类访问者都定义了三种权限：</h3>
-<blockquote>
-<p>r : Readable</p>
-</blockquote>
-<blockquote>
-<p>w : Writable</p>
-</blockquote>
-<blockquote>
-<p>x : eXcutable</p>
-</blockquote>
-<h4 id="文件">文件：</h4>
-<blockquote>
-<p>r: 可使用文件查看类工具获取其内容；</p>
-</blockquote>
-<blockquote>
-<p>w: 可修改其内容；</p>
-</blockquote>
-<blockquote>
-<p>x: 可以把此文件提请内核启动为一个进程；</p>
-</blockquote>
-<h4 id="目录">目录：</h4>
-<blockquote>
-<p>r: 可以使用ls查看此目录中文件列表；</p>
-</blockquote>
-<blockquote>
-<p>w: 可在此目录中创建文件，也可删除此目录中的文件；</p>
-</blockquote>
-<blockquote>
-<p>x: 可以使用ls -l查看此目录中文件列表，可以cd进入此目录；</p>
-</blockquote>
-<pre><code>数字权限转换：
-	--- 000 0
-	--x 001 1
-	-w- 010 2
-	-wx 011 3
-	r-- 100 4
-	r-x 101 5
-	rw- 110 6
-	rwx 111 7
-例如：
-	640: rw-r-----
-	rwxr-xr-x: 755
-</code></pre>
-<h3 id="修改文件权限chmod">修改文件权限：chmod</h3>
-<blockquote></blockquote>
-<pre><code>chmod [OPTION]... OCTAL-MODE FILE...
-	-R: 递归修改权限
-	chmod [OPTION]... MODE[,MODE]... FILE...
-		MODE:
-		修改一类用户的所有权限：
-			u=xxx
-			g=xxx
-			o=xxx
-			ug=xxx
-			a=xxx
-			u=,g=xxx
-修改一类用户某位或某些位权限
-	u+
-	u-
-chmod [OPTION]... --reference=RFILE FILE...
-
-参考RFILE文件的权限，将FILE的修改为同RFILE；
-</code></pre>
-<h3 id="修改文件的属主和属组">修改文件的属主和属组：</h3>
-<blockquote>
-<p>仅root可用；</p>
-</blockquote>
-<pre><code>修改文件的属主：chown
-chown [OPTION]... [OWNER][:[GROUP]] FILE...
-	用法：
-		OWNER
-				OWNER:GROUP
-				:GROUP
-					Note: 命令中的冒号可用.替换；
-				-R: 递归
-			chown [OPTION]... --reference=RFILE FILE...
-修改文件的属组：chgrp
-	chgrp [OPTION]... GROUP FILE...
-	chgrp [OPTION]... --reference=RFILE FILE...
-	-R
-</code></pre>
-<h4 id="文件或目录创建时的遮罩码umask">文件或目录创建时的遮罩码：umask</h4>
-<pre><code>FILE: 666-umask
-	Note: 如果某类的用户的权限减得的结果中存在x权限，则将其权限+1
-DIR: 777-umask	
-	umask: 查看
-	umask #: 设定
-</code></pre>
-<blockquote>
-<p>命令总结：chmod, chown, chgrp, umask</p>
-</blockquote>
 ]]></content>
     </entry>
 </feed>

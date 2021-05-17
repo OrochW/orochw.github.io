@@ -2,22 +2,20 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>redis一键安装脚本 | Gridea</title>
+<title>jenkins war包起服务 | Gridea</title>
 <link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1621238191758">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="redis一键安装脚本 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
+<link rel="alternate" type="application/atom+xml" title="jenkins war包起服务 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
 
-    <meta name="description" content="安装redis
-cd /opt
-useradd redis
-mkdir -pv /data/apps/redis/{conf,logs,data}
+    <meta name="description" content="需要JDK
+/opt/jdk1.8.0_201/bin/java  -jar /data/jenkins.war &gt;/tmp/jenkins.out 2&gt;&amp;1
 
-wget http://download.redis.io/releases/redis-..." />
-    <meta name="keywords" content="脚本" />
+..." />
+    <meta name="keywords" content="杂记-Linux" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
     <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
   </head>
@@ -79,80 +77,31 @@ wget http://download.redis.io/releases/redis-..." />
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              redis一键安装脚本
+              jenkins war包起服务
             </h2>
             <div class="post-info">
               <span>
-                2021-05-16
+                2021-05-17
               </span>
               <span>
-                2 min read
+                1 min read
               </span>
               
-                <a href="https://orochw.github.io/tag/8z3V-NCKk/" class="post-tag">
-                  # 脚本
+                <a href="https://orochw.github.io/tag/EKIlBm3oCT/" class="post-tag">
+                  # 杂记-Linux
                 </a>
               
             </div>
             
             <div class="post-content-wrapper">
               <div class="post-content">
-                <h2 id="安装redis">安装redis</h2>
-<pre><code>cd /opt
-useradd redis
-mkdir -pv /data/apps/redis/{conf,logs,data}
-
-wget http://download.redis.io/releases/redis-5.0.0.tar.gz
-tar -xf redis-5.0.0.tar.gz
-cd redis-5.0.0
-
-
-make install PREFIX=/data/apps/redis
-
-cp redis.conf /data/apps/redis/conf/
-chown -R redis.redis /data/apps/redis
-
-cd /data/apps/redis
-sed -i 's/appendonly no/appendonly yes/' conf/redis.conf
-sed -i '/^dir/d' conf/redis.conf
-echo &quot;dir /data/apps/redis/data&quot; &gt;&gt; conf/redis.conf
-echo &quot;requirepass `&lt; /dev/urandom tr -cd _A-Z-a-z-0-9@#^ | head -c ${1:-20}; echo`&quot;  &gt;&gt; conf/redis.conf
-sed -i 's#logfile &quot;&quot;#logfile &quot;/data/apps/redis/logs/redis.log&quot;#g' conf/redis.conf
-sed -i 's/bind 127.0.0.1/bind 0.0.0.0/' conf/redis.conf
-sed -i 's/protected-mode yes/protected-mode no/' conf/redis.conf
-
-
-
-cat &lt;&lt;EOF &gt; /usr/lib/systemd/system/redis.service
-[Unit]
-Description=Redis Server Manager
-After=syslog.target
-After=network.target
-
-[Service]
-Type=simple
-User=redis
-Group=redis
-PIDFile=/var/run/redis_6379.pid
-ExecStart=/data/apps/redis/bin/redis-server /data/apps/redis/conf/redis.conf
-ExecStop=/data/apps/redis/bin/redis-cli shutdown
-Restart=always
-#ReadWriteDirectories=/data/apps/redis/data
-[Install]
-WantedBy=multi-user.target
-EOF
+                <p>需要JDK</p>
+<pre><code>/opt/jdk1.8.0_201/bin/java  -jar /data/jenkins.war &gt;/tmp/jenkins.out 2&gt;&amp;1
 </code></pre>
 
               </div>
               <div class="toc-container">
-                <ul class="markdownIt-TOC">
-<li>
-<ul>
-<li><a href="#%E5%AE%89%E8%A3%85redis">安装redis</a></li>
-</ul>
-</li>
-</ul>
-
+                
               </div>
             </div>
           </article>
@@ -161,9 +110,9 @@ EOF
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://orochw.github.io/post/xin-kai-ji-qi-suo-xu-an-zhuang/">
+            <a href="https://orochw.github.io/post/nginx-yi-jian-bian-yi-jiao-ben/">
               <h3 class="post-title">
-                新开机器所需安装
+                nginx一键编译脚本
               </h3>
             </a>
           </div>
