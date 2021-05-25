@@ -1,0 +1,333 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>一个pipeline 4个功能 | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1621931307076">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="一个pipeline 4个功能 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+
+突发奇想让开发在测试环境实现服务的四个状态
+一个pipeline的四个功能块
+前提了解pipeline的语法
+
+jenkins pipeline基础语法与示例
+pipeline {
+    agent any
+    environme..." />
+    <meta name="keywords" content="pipeline" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1621931307076" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              一个pipeline 4个功能
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-05-25
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://orochw.github.io/tag/uRcluUGmx/" class="post-tag">
+                  # pipeline
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/OrochW/picGo/master/%E6%97%A0%E6%A0%87%E9%A2%98.png" alt="" loading="lazy"></figure>
+<blockquote>
+<p>突发奇想让开发在测试环境实现服务的四个状态<br>
+一个pipeline的四个功能块<br>
+前提了解pipeline的语法</p>
+</blockquote>
+<p><a href="https://www.jianshu.com/p/f1167e8850cd">jenkins pipeline基础语法与示例</a></p>
+<pre><code>pipeline {
+    agent any
+    environment {
+	   //项目名称
+       PROJECT_NAME=&quot;imin&quot;
+	   //相对编译目录的jar包路径 
+	   JAR_PATH = &quot;target/${PROJECT_NAME}.jar&quot;
+	   //目标主机 jar包目录路径
+	   DEST_HOST_JAR_DIR = &quot;/home/java/${PROJECT_NAME}/&quot;
+	   //目标主机ip 或者 主机名
+	   DEST_HOST=&quot;im&quot;
+	   //jar包使用的配置
+	   ACTIVE_NAME = &quot;t&quot;
+	   //ssh到目标主机的用户名
+	   SSH_USER = &quot;centos&quot;
+	   //ssh到目标主机的端口
+	   SSH_PORT = &quot;6&quot;
+	   //jar包启动监听的端口
+	   SERVER_PORT=&quot;90&quot;
+    }
+	stages {
+		stage('拉代码'){
+			when {
+				environment name: 'ACT',
+				value: 'update'
+			}
+				steps{
+					git branch: &quot;${BRANCH}&quot;, credentialsId: 'xxxxxxxxxxxx', url: 'http://git.xxxxxxxxxxxxxxxxxxxxxxxxx.git'
+				}
+		}
+		
+		stage('编译'){
+			when {
+				environment name: 'ACT',
+				value: 'update'
+			}
+				steps{
+					withMaven(maven: 'M3.6.3') {
+						//mvn构建
+						sh &quot;mvn clean install -Dmaven.test.skip=true &amp;&amp; ls -a&quot;
+					}
+				}
+		}
+
+		stage('停止当前服务'){
+			when {
+				anyOf{
+					environment name: 'ACT',
+					value: 'update';
+					
+					environment name: 'ACT',
+					value: 'restart';
+					
+					environment name: 'ACT',
+					value: 'stop';
+					
+					environment name: 'ACT',
+					value: 'rollback';
+				}
+			}
+			steps{
+			
+				//停止当前服务
+				sh &quot;&quot;&quot;
+					ssh -p ${SSH_PORT} -i /home/id_rsa  ${SSH_USER}@${DEST_HOST} -tt &lt;&lt; remotessh
+					(jps -mvl |grep ${PROJECT_NAME} |cut -d ' ' -f 1 |xargs kill -9 )||echo 没找到服务可以kill
+					exit
+					remotessh
+				&quot;&quot;&quot;
+			}
+		}
+		
+		stage('目标主机jar包回滚'){
+			when {
+				environment name: 'ACT',
+				value: 'rollback'
+			}	    
+				steps{
+					//回滚jar包
+					sh &quot;&quot;&quot;
+						ssh -p ${SSH_PORT} -i /home/id_rsa  ${SSH_USER}@${DEST_HOST} -tt &lt;&lt; remotessh
+						echo 备份jar包
+						cd ${DEST_HOST_JAR_DIR}
+						rm -rf ${PROJECT_NAME}.jar
+						mv bak_${PROJECT_NAME}.jar ${PROJECT_NAME}.jar || echo 没找到备份jar包
+						exit
+						remotessh
+					&quot;&quot;&quot;
+				}
+		}
+		
+		
+		stage('备份并发送jar包'){
+			when {
+				environment name: 'ACT',
+				value: 'update'
+			}	    
+				steps{
+					//备份jar包
+					sh &quot;&quot;&quot;
+						ssh -p ${SSH_PORT} -i /home/id_rsa  ${SSH_USER}@${DEST_HOST} -tt &lt;&lt; remotessh
+						echo 备份jar包
+						cd ${DEST_HOST_JAR_DIR}
+						rm -rf bak_${PROJECT_NAME}.jar
+						mv ${PROJECT_NAME}.jar bak_${PROJECT_NAME}.jar || echo 没找到jar包无需备份
+						exit
+						remotessh
+					&quot;&quot;&quot;
+					//传输新的jar包
+					sh &quot;cd ${PROJECT_NAME} &amp;&amp; scp -P${SSH_PORT} -i /home/id_rsa  ${JAR_PATH}  ${SSH_USER}@${DEST_HOST}:${DEST_HOST_JAR_DIR}&quot;
+				}
+		}
+
+		stage('启动服务'){
+			when {
+				anyOf{
+					environment name: 'ACT',
+					value: 'update';
+					
+					environment name: 'ACT',
+					value: 'restart';
+					
+					environment name: 'ACT',
+					value: 'rollback';
+				}
+			}
+			steps{
+				//执行部署脚本
+				sh &quot;&quot;&quot;
+					ssh -p ${SSH_PORT} -i /home/id_rsa  ${SSH_USER}@${DEST_HOST} -tt &lt;&lt; remotessh
+					echo 执行脚本
+					cd ${DEST_HOST_JAR_DIR}
+					pwd
+					ls -l
+					sleep 10
+					nohup java  \
+						-jar ./${PROJECT_NAME}.jar \
+						-Xms512 -Xmx512 -Xmn256 \
+						--server.port=${SERVER_PORT} \
+						--spring.profiles.active=${ACTIVE_NAME} \
+						&gt; output.log 2&gt;&amp;1 &amp;
+					exit
+					remotessh
+				&quot;&quot;&quot;
+			}
+		}
+	}
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/jenkins-war-bao-qi-fu-wu/">
+              <h3 class="post-title">
+                jenkins war包起服务
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
