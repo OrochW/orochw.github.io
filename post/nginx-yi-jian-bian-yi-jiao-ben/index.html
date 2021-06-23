@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>nginx一键编译脚本 | Gridea</title>
-<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1621931307076">
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1624447904228">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="nginx一键编译脚本 | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
@@ -12,8 +12,7 @@
 
 
     <meta name="description" content="############  安装nginx
-yum install -y  pcre pcre-devel zlib zlib-devel openssl openssl-devel autoconf automake make
-usera..." />
+yum install -y  pcre pcre-devel zlib zlib-devel openssl openssl-devel autoconf automake make gcc-c..." />
     <meta name="keywords" content="杂记-Linux" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
     <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
@@ -23,7 +22,7 @@ usera..." />
       <div class="main-content">
         <div class="site-header">
   <a href="https://orochw.github.io">
-  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1621931307076" alt="">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1624447904228" alt="">
   </a>
   <h1 class="site-title">
     Gridea
@@ -95,11 +94,11 @@ usera..." />
             <div class="post-content-wrapper">
               <div class="post-content">
                 <pre><code>############  安装nginx
-yum install -y  pcre pcre-devel zlib zlib-devel openssl openssl-devel autoconf automake make
+yum install -y  pcre pcre-devel zlib zlib-devel openssl openssl-devel autoconf automake make gcc-c++
 useradd -s /sbin/nologin nginx
 cd /usr/local/src
 wget http://nginx.org/download/nginx-1.16.0.tar.gz
-tar -xf nginx-1.16.0.tar.gz
+tar -xf nginx-1.18.0.tar.gz
 cd nginx-1.16.0
 ./configure --prefix=/usr/local/nginx --user=nginx --group=nginx --with-http_realip_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_ssl_module  --with-http_flv_module --with-stream --with-threads --with-stream_realip_module --with-stream_ssl_module --with-file-aio
 make &amp;&amp; make install
