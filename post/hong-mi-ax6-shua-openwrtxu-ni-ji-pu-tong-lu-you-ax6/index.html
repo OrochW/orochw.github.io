@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>红米 AX6 刷 openwrt(虚拟机+普通路由+AX6) | Gridea</title>
-<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1625732913955">
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1625733345064">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="红米 AX6 刷 openwrt(虚拟机+普通路由+AX6) | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
@@ -14,12 +14,12 @@
     <meta name="description" content="准备
 电脑 建议笔记本
 旧路由
+ssh远程终端软件
 第一步｜降级并恢复出厂设置
 下载大佬的上传的红米固件
 打开路由器后台选择 系统升级—手动升级—然后选择下载好的固件，等待重启。
 然后最好再恢复下出厂设置。
-第二步｜准备 openwrt 服务
-进入旧路由器后台..." />
+第二步｜准备 openwrt 服..." />
     <meta name="keywords" content="" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
     <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
@@ -29,7 +29,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://orochw.github.io">
-  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1625732913955" alt="">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1625733345064" alt="">
   </a>
   <h1 class="site-title">
     Gridea
@@ -89,7 +89,7 @@
                 2021-07-08
               </span>
               <span>
-                5 min read
+                6 min read
               </span>
               
             </div>
@@ -98,7 +98,8 @@
               <div class="post-content">
                 <h2 id="准备">准备</h2>
 <p>电脑 建议笔记本<br>
-旧路由</p>
+旧路由<br>
+<a href="http://ct.ghpym.com/dir/7369060-41263334-4739c3">ssh远程终端软件</a></p>
 <h2 id="第一步降级并恢复出厂设置">第一步｜降级并恢复出厂设置</h2>
 <p>下载大佬的上传的<a href="https://cdn.cnbj1.fds.api.mi-img.com/xiaoqiang/rom/ra69/miwifi_ra69_firmware_45a77_1.0.18.bin">红米固件</a><br>
 打开路由器后台选择 系统升级—手动升级—然后选择下载好的固件，等待重启。<br>
@@ -208,6 +209,8 @@ nvram set ssh_en=1
 nvram commit
 </code></pre>
 <p>scp 固件 qsdk 固件并刷入<br>
+<img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708163500.png" alt="" loading="lazy"><br>
+如果下载了这个xmoba就不需要ssh再搞一个winscp了。直接拖就完事了<br>
 scp 下载好的 xiaomimtd12.bin 到 红米 AX6 的 /tmp 下面</p>
 <pre><code>scp xiaomimtd12.bin root@192.168.31.1:/tmp
 </code></pre>
@@ -215,8 +218,8 @@ scp 下载好的 xiaomimtd12.bin 到 红米 AX6 的 /tmp 下面</p>
 <pre><code>mtd write /tmp/xiaomimtd12.bin rootfs
 </code></pre>
 <p>断电重启红米 AX6，此时红米 AX 6 的后台地址已经变为 192.168.1.1</p>
-<p>重新分区<br>
-scp 下载好的 a6minbib.bin 到 红米 AX6 的 /tmp 下面</p>
+<p>重新分区</p>
+<p>scp 下载好的 a6minbib.bin 到 红米 AX6 的 /tmp 下面</p>
 <pre><code>scp a6minbib.bin root@192.168.1.1:/tmp
 </code></pre>
 <p>并在 红米AX6 上执行</p>

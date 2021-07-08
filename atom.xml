@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://orochw.github.io</id>
     <title>Gridea</title>
-    <updated>2021-07-08T08:28:39.321Z</updated>
+    <updated>2021-07-08T08:35:52.046Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://orochw.github.io"/>
     <link rel="self" href="https://orochw.github.io/atom.xml"/>
@@ -18,7 +18,8 @@
         <updated>2021-07-08T07:46:25.000Z</updated>
         <content type="html"><![CDATA[<h2 id="准备">准备</h2>
 <p>电脑 建议笔记本<br>
-旧路由</p>
+旧路由<br>
+<a href="http://ct.ghpym.com/dir/7369060-41263334-4739c3">ssh远程终端软件</a></p>
 <h2 id="第一步降级并恢复出厂设置">第一步｜降级并恢复出厂设置</h2>
 <p>下载大佬的上传的<a href="https://cdn.cnbj1.fds.api.mi-img.com/xiaoqiang/rom/ra69/miwifi_ra69_firmware_45a77_1.0.18.bin">红米固件</a><br>
 打开路由器后台选择 系统升级—手动升级—然后选择下载好的固件，等待重启。<br>
@@ -128,6 +129,8 @@ nvram set ssh_en=1
 nvram commit
 </code></pre>
 <p>scp 固件 qsdk 固件并刷入<br>
+<img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708163500.png" alt="" loading="lazy"><br>
+如果下载了这个xmoba就不需要ssh再搞一个winscp了。直接拖就完事了<br>
 scp 下载好的 xiaomimtd12.bin 到 红米 AX6 的 /tmp 下面</p>
 <pre><code>scp xiaomimtd12.bin root@192.168.31.1:/tmp
 </code></pre>
@@ -135,8 +138,8 @@ scp 下载好的 xiaomimtd12.bin 到 红米 AX6 的 /tmp 下面</p>
 <pre><code>mtd write /tmp/xiaomimtd12.bin rootfs
 </code></pre>
 <p>断电重启红米 AX6，此时红米 AX 6 的后台地址已经变为 192.168.1.1</p>
-<p>重新分区<br>
-scp 下载好的 a6minbib.bin 到 红米 AX6 的 /tmp 下面</p>
+<p>重新分区</p>
+<p>scp 下载好的 a6minbib.bin 到 红米 AX6 的 /tmp 下面</p>
 <pre><code>scp a6minbib.bin root@192.168.1.1:/tmp
 </code></pre>
 <p>并在 红米AX6 上执行</p>
