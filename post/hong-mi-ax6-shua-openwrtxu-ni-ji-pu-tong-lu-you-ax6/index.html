@@ -1,0 +1,336 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>红米 AX6 刷 openwrt(虚拟机+普通路由+AX6) | Gridea</title>
+<link rel="shortcut icon" href="https://orochw.github.io/favicon.ico?v=1625732913955">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://orochw.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="红米 AX6 刷 openwrt(虚拟机+普通路由+AX6) | Gridea - Atom Feed" href="https://orochw.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="准备
+电脑 建议笔记本
+旧路由
+第一步｜降级并恢复出厂设置
+下载大佬的上传的红米固件
+打开路由器后台选择 系统升级—手动升级—然后选择下载好的固件，等待重启。
+然后最好再恢复下出厂设置。
+第二步｜准备 openwrt 服务
+进入旧路由器后台..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://orochw.github.io">
+  <img class="avatar" src="https://orochw.github.io/images/avatar.png?v=1625732913955" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    OrochW Blog
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              红米 AX6 刷 openwrt(虚拟机+普通路由+AX6)
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-07-08
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="准备">准备</h2>
+<p>电脑 建议笔记本<br>
+旧路由</p>
+<h2 id="第一步降级并恢复出厂设置">第一步｜降级并恢复出厂设置</h2>
+<p>下载大佬的上传的<a href="https://cdn.cnbj1.fds.api.mi-img.com/xiaoqiang/rom/ra69/miwifi_ra69_firmware_45a77_1.0.18.bin">红米固件</a><br>
+打开路由器后台选择 系统升级—手动升级—然后选择下载好的固件，等待重启。<br>
+然后最好再恢复下出厂设置。</p>
+<h2 id="第二步准备-openwrt-服务">第二步｜准备 openwrt 服务</h2>
+<p>进入旧路由器后台关闭dhcp服务 改地址为169.254.31.100<br>
+<a href="https://www.right.com.cn/forum/forum.php?mod=viewthread&amp;tid=4560135&amp;extra=page%3D1%26filter%3Dtypeid%26typeid%25**3D64**">回复恩山大佬帖子获得工具</a><br>
+<a href="https://jq.qq.com/?_wv=1027&amp;k=sIidd71F">加入群聊获得openwrt虚拟机镜像</a></p>
+<h3 id="创建-lua-文件">创建 lua 文件</h3>
+<p>打开虚拟机镜像输入命令</p>
+<pre><code>ip a
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708161543.png" alt="" loading="lazy"><br>
+ssh 连接上 虚拟机openwrt 的路由器，密码password然后使用 nano 创建 /usr/lib/lua/luci/controller/admin/xqsystem.lua 这样一个文件。</p>
+<pre><code>nano /usr/lib/lua/luci/controller/admin/xqsystem.lua
+</code></pre>
+<p>如果你的系统没有 nano 你可以使用 vi 或 vim</p>
+<pre><code>vim /usr/lib/lua/luci/controller/admin/xqsystem.lua
+</code></pre>
+<p>文件内容填写下面的保存即可。</p>
+<pre><code>module(&quot;luci.controller.admin.xqsystem&quot;, package.seeall)
+
+
+function index()
+    local page   = node(&quot;api&quot;)
+    page.target  = firstchild()
+    page.title   = (&quot;&quot;)
+    page.order   = 100
+    page.index = true
+    page   = node(&quot;api&quot;,&quot;xqsystem&quot;)
+    page.target  = firstchild()
+    page.title   = (&quot;&quot;)
+    page.order   = 100
+    page.index = true
+    entry({&quot;api&quot;, &quot;xqsystem&quot;, &quot;token&quot;}, call(&quot;getToken&quot;), (&quot;&quot;), 103, 0x08)
+end
+
+local LuciHttp = require(&quot;luci.http&quot;)
+
+function getToken()
+    local result = {}
+    result[&quot;code&quot;] = 0
+    result[&quot;token&quot;] = &quot;; nvram set ssh_en=1; nvram commit; echo -e 'admin\nadmin' | passwd root; sed -i 's/channel=.*/channel=\&quot;debug\&quot;/g' /etc/init.d/dropbear; /etc/init.d/dropbear start;&quot;
+    LuciHttp.write_json(result)
+end
+</code></pre>
+<p>输入完成后你可以 cat /usr/lib/lua/luci/controller/admin/xqsystem.lua 检查一下。</p>
+<h3 id="修改-openwrt-路由器的-lan-地址并关闭-dhcp">修改 openwrt 路由器的 Lan 地址，并关闭 DHCP</h3>
+<p>进入虚拟机openwrt 192.168.1.1<br>
+用户root<br>
+密码password<br>
+改lan地址为169.254.31.1 关闭dhcp<br>
+修改pc地址为169.254.31.3<br>
+然后浏览器访问：http://169.254.31.1/cgi-bin/luci/api/xqsystem/token，如果得到下面的结果，则证明你设置成功。<br>
+<img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708162113.png" alt="" loading="lazy"></p>
+<h2 id="第三步红米-ax-6-破解-ssh">第三步｜红米 AX 6 破解 SSH</h2>
+<p>将电脑的网络设置回自动获取 DHCP，然后最好将电脑用网线和 红米 AX6 连接（因为红米 ax6 解锁 Wi-Fi 可能会掉线）。</p>
+<h3 id="获取后台-stok">获取后台 STOK</h3>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708162235.png" alt="" loading="lazy"></figure>
+<h3 id="第一次请求">第一次请求</h3>
+<pre><code>http://192.168.31.1/cgi-bin/luci/;stok=&lt;STOK&gt;/api/misystem/extendwifi_connect?ssid={SSID}&amp;password={Wi-Fi密码}
+</code></pre>
+<ul>
+<li>
+<p><STOK> 替换为上面的值</p>
+</li>
+<li>
+<p>{SSID} 替换为 openwrt 路由器的 Wi-Fi 名</p>
+</li>
+<li>
+<p>{Wi-Fi密码} 替换为 openwrt 路由器的 Wi-Fi 密码</p>
+</li>
+</ul>
+<p>&lt;&gt; 和 {} 均需要替换</p>
+<p>将替换好的值复制到浏览器请求，如果显示 code 0 则成功。<br>
+<img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708162431.png" alt="" loading="lazy"></p>
+<h3 id="第二次请求">第二次请求</h3>
+<pre><code>http://192.168.31.1/cgi-bin/luci/;stok=&lt;STOK&gt;/api/xqsystem/oneclick_get_remote_token?username=xxx&amp;password=xxx&amp;nonce=xxx
+</code></pre>
+<p><STOK> 替换为小米路由器后台获得的值即可，其它均不用改变</p>
+<p>将替换好的值复制到浏览器请求，如果显示 code 0 则成功<br>
+<img src="https://raw.githubusercontent.com/OrochW/picGo/master/20210708162532.png" alt="" loading="lazy"></p>
+<h3 id="第四步验证-ssh-并备份">第四步｜验证 SSH 并备份</h3>
+<p>ssh 连接小米路由器ssh root@192.168.31.1 密码是 admin，如果能 ssh 连接上则证明上述步骤均完成。</p>
+<p>链接成功后进行备份</p>
+<pre><code>mkdir /tmp/syslogbackup/
+dd if=/dev/mtd9 of=/tmp/syslogbackup/mtd9
+</code></pre>
+<p>浏览器请求该地址下载备份</p>
+<pre><code>http://192.168.31.1/backup/log/mtd9
+</code></pre>
+<h3 id="第五步刷入-openwrt-固件">第五步｜刷入 openwrt 固件</h3>
+<p>下载固件备用<br>
+下载固件：https://pan.baidu.com/s/1NVDSw79g4V18JpucMsBMkw<br>
+提取码：fmaw</p>
+<p>ssh 连接 红米 ax 设置env<br>
+ssh 连接上后复制👇下面执行</p>
+<pre><code>nvram set flag_last_success=0
+nvram set flag_boot_rootfs=0
+nvram set flag_boot_success=1
+nvram set flag_try_sys1_failed=0
+nvram set flag_try_sys2_failed=0
+nvram set boot_wait=on
+nvram set uart_en=1
+nvram set telnet_en=1
+nvram set ssh_en=1
+nvram commit
+</code></pre>
+<p>scp 固件 qsdk 固件并刷入<br>
+scp 下载好的 xiaomimtd12.bin 到 红米 AX6 的 /tmp 下面</p>
+<pre><code>scp xiaomimtd12.bin root@192.168.31.1:/tmp
+</code></pre>
+<p>并在红米 AX6 上执行</p>
+<pre><code>mtd write /tmp/xiaomimtd12.bin rootfs
+</code></pre>
+<p>断电重启红米 AX6，此时红米 AX 6 的后台地址已经变为 192.168.1.1</p>
+<p>重新分区<br>
+scp 下载好的 a6minbib.bin 到 红米 AX6 的 /tmp 下面</p>
+<pre><code>scp a6minbib.bin root@192.168.1.1:/tmp
+</code></pre>
+<p>并在 红米AX6 上执行</p>
+<pre><code>. /lib/upgrade/platform.sh
+switch_layout boot; do_flash_failsafe_partition a6minbib &quot;0:MIBIB&quot;
+</code></pre>
+<p>拔电源重启路由器</p>
+<p>openwrt刷入到rootfs_1分区<br>
+scp 下载好的 openwrt-ipq807x-generic-xiaomi_ax6-squashfs-nand-factory.bin 到 红米 AX6 的 /tmp</p>
+<pre><code>scp openwrt-ipq807x-generic-xiaomi_ax6-squashfs-nand-factory.bin root@192.168.1.1:/tmp
+</code></pre>
+<p>在红米 AX6 上执行刷入</p>
+<pre><code>ubiformat /dev/mtd13 -y -f /tmp/openwrt-ipq807x-generic-xiaomi_ax6-squashfs-nand-factory.bin
+fw_setenv flag_last_success 1
+fw_setenv flag_boot_rootfs 1
+</code></pre>
+<p>红米 AX6 执行命令重启</p>
+<pre><code>reboot
+</code></pre>
+<p>重启后完成，系统应该已经是 openwrt 系统了。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%87%86%E5%A4%87">准备</a></li>
+<li><a href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E9%99%8D%E7%BA%A7%E5%B9%B6%E6%81%A2%E5%A4%8D%E5%87%BA%E5%8E%82%E8%AE%BE%E7%BD%AE">第一步｜降级并恢复出厂设置</a></li>
+<li><a href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%E5%87%86%E5%A4%87-openwrt-%E6%9C%8D%E5%8A%A1">第二步｜准备 openwrt 服务</a>
+<ul>
+<li><a href="#%E5%88%9B%E5%BB%BA-lua-%E6%96%87%E4%BB%B6">创建 lua 文件</a></li>
+<li><a href="#%E4%BF%AE%E6%94%B9-openwrt-%E8%B7%AF%E7%94%B1%E5%99%A8%E7%9A%84-lan-%E5%9C%B0%E5%9D%80%E5%B9%B6%E5%85%B3%E9%97%AD-dhcp">修改 openwrt 路由器的 Lan 地址，并关闭 DHCP</a></li>
+</ul>
+</li>
+<li><a href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%E7%BA%A2%E7%B1%B3-ax-6-%E7%A0%B4%E8%A7%A3-ssh">第三步｜红米 AX 6 破解 SSH</a>
+<ul>
+<li><a href="#%E8%8E%B7%E5%8F%96%E5%90%8E%E5%8F%B0-stok">获取后台 STOK</a></li>
+<li><a href="#%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%AF%B7%E6%B1%82">第一次请求</a></li>
+<li><a href="#%E7%AC%AC%E4%BA%8C%E6%AC%A1%E8%AF%B7%E6%B1%82">第二次请求</a></li>
+<li><a href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%E9%AA%8C%E8%AF%81-ssh-%E5%B9%B6%E5%A4%87%E4%BB%BD">第四步｜验证 SSH 并备份</a></li>
+<li><a href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%E5%88%B7%E5%85%A5-openwrt-%E5%9B%BA%E4%BB%B6">第五步｜刷入 openwrt 固件</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://orochw.github.io/post/yi-ge-pipeline-4-ge-gong-neng/">
+              <h3 class="post-title">
+                一个pipeline 4个功能
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://orochw.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
